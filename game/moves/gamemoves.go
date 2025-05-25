@@ -6,16 +6,18 @@ import (
 	"strings"
 )
 
+type square string
+type validMovesPerSquare map[square]bool
+type validMoves map[square]validMovesPerSquare
+
 const (
 	BLACK_QUEEN_STARTING_SQUARE square = "Qf8"
 	WHITE_QUEEN_STARTING_SQUARE square = "Qa6"
-	BLACK                              = "black"
-	WHITE                              = "white"
+	// TODO: need to think later how to represent the start of the game for black.
+	WHITE_QUEEN_MOVE_ZERO square = "..."
+	BLACK                 string = "black"
+	WHITE                 string = "white"
 )
-
-type square string
-type validMovesPerSquare map[square](bool)
-type validMoves map[square](validMovesPerSquare)
 
 type GameMoves struct {
 	color      string
@@ -32,7 +34,6 @@ func NewGameMoves(color string) *GameMoves {
 	validMoves, err := initValidMoves("game/data/queen_valid_moves.json")
 	if err != nil {
 		panic("failed to initialize valid moves: " + err.Error())
-
 	}
 
 	gm := &GameMoves{
@@ -41,18 +42,24 @@ func NewGameMoves(color string) *GameMoves {
 		validMoves: validMoves,
 	}
 
+	if color == WHITE {
+		gm.queenMoves = append(gm.queenMoves, newQueenMove(WHITE_QUEEN_MOVE_ZERO))
+	}
+
 	return gm
 }
 
 func (gm *GameMoves) IsNextMoveValidMove(nextMove square) bool {
 
+	// TODO: maybe I should have a switch/case here for the scenarios:
+	// is first, and if black/white (total 4)
 	if gm.isFirstMove() && gm.isBlack() && gm.isInvalidBlackFirstMove(nextMove) {
 		return false
 	}
 
 	lastMove := gm.queenMoves[len(gm.queenMoves)-1]
 
-	lastMoveSquare := lastMove.square
+	lastMoveSquare := square(lastMove.square)
 	nextMoveSquare := nextMove
 
 	validDestinations, exists := gm.validMoves[lastMoveSquare]
