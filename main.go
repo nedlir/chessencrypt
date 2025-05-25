@@ -1,11 +1,13 @@
 package main
 
 import (
-	"chessencryption/chess/moves"
+	"chessencryption/game/moves"
+	"fmt"
 )
 
 func main() {
-	var blackQueenMoves []moves.QueenMove
-	first_black_move := moves.NewQueenMove("-")
-	blackQueenMoves = append(blackQueenMoves, first_black_move)
+	game := moves.NewGameMoves("black")
+
+	fmt.Print(game)
+
 }
