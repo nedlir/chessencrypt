@@ -41,10 +41,6 @@ func NewGameMoves(color string) *GameMoves {
 
 // }
 
-// func isValidMove(move string) bool {
-
-// }
-
 func initValidMoves(filepath string) (validMoves, error) {
 	parser := parsers.NewJSONParser()
 
@@ -63,4 +59,41 @@ func initValidMoves(filepath string) (validMoves, error) {
 	}
 
 	return vm, nil
+}
+
+func (gm *GameMoves) IsNextMoveValidMove(nextMove string) bool {
+
+	if gm.IsFirstMove() && gm.isBlack() && gm.isInvalidBlackFirstMove(nextMove) {
+		return false
+	}
+
+	lastMove := gm.queenMoves[len(gm.queenMoves)-1]
+
+	currentSquare := square(lastMove.square)
+	nextSquare := square(nextMove)
+
+	validDestinations, exists := gm.validMoves[currentSquare]
+	if !exists {
+		return false
+	}
+
+	isValid := validDestinations[nextSquare]
+
+	return isValid
+}
+
+func (gm *GameMoves) IsFirstMove() bool {
+	return len(gm.queenMoves) == 0
+}
+
+func (gm *GameMoves) isInvalidBlackFirstMove(firstMove string) bool {
+	return firstMove != "Qg8" && firstMove != "Qh8"
+}
+
+func (gm *GameMoves) isBlack() bool {
+	return gm.color == "black"
+}
+
+func (gm *GameMoves) isWhite() bool {
+	return gm.color == "white"
 }
