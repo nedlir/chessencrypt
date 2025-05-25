@@ -1,3 +1,3 @@
-module chess_encrypt
+module chessencryption
 
 go 1.23.2

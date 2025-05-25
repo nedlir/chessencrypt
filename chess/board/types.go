@@ -1,7 +1,7 @@
 package board
 
-type Square string
-
+type Board struct {
+}
 type SquareValue int
 
 const (
