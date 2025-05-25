@@ -1,4 +1,9 @@
 // Pseudo code of the algorithm, need to check
+package algorithm 
+
+const LEFT = "left"
+const RIGHT = "right"
+var whiteQueenDirection = LEFT
 
 var currentRow (serves as i)
 var currentColumn (serves as j)

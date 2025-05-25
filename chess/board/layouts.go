@@ -1,14 +1,20 @@
 package board
 
-const (
-	WhiteQueenBoardRows int = 6
-	WhiteQueenBoardCols int = 8
+import . "chessencryption/chess/constants"
 
-	BlackQueenBoardRows int = 1
-	BlackQueenBoardCols int = 5
+const (
+	WhiteBoardRows = 6
+	WhiteBoardCols = 8
+	BlackBoardRows = 1
+	BlackBoardCols = 5
 )
 
-var WhiteQueenChessBoard = [WhiteQueenBoardRows][WhiteQueenBoardCols]string{
+var (
+	BLACK_START_POSITION = NewPosition(0, 2, "f8")
+	WHITE_START_POSITION = NewPosition(0, 0, "a6")
+)
+
+var WhiteQueenLayout = [WhiteBoardRows][WhiteBoardCols]Square{
 	{"a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6"},
 	{"a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5"},
 	{"a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4"},
@@ -17,6 +23,6 @@ var WhiteQueenChessBoard = [WhiteQueenBoardRows][WhiteQueenBoardCols]string{
 	{"a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"},
 }
 
-var BlackQueenChessBoard = [BlackQueenBoardRows][BlackQueenBoardCols]string{
+var BlackQueenLayout = [BlackBoardRows][BlackBoardCols]Square{
 	{"d8", "e8", "f8", "g8", "h8"},
 }
