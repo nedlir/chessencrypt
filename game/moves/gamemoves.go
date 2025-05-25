@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+const (
+	BLACK_QUEEN_STARTING_SQUARE square = "Qf8"
+	WHITE_QUEEN_STARTING_SQUARE square = "Qa6"
+	BLACK                              = "black"
+	WHITE                              = "white"
+)
+
 type square string
 type validMovesPerSquare map[square](bool)
 type validMoves map[square](validMovesPerSquare)
@@ -18,7 +25,7 @@ type GameMoves struct {
 
 func NewGameMoves(color string) *GameMoves {
 	color = strings.ToLower(color)
-	if color != "white" && color != "black" {
+	if color != WHITE && color != BLACK {
 		panic("invalid color: must be 'white' or 'black'")
 	}
 
@@ -37,9 +44,33 @@ func NewGameMoves(color string) *GameMoves {
 	return gm
 }
 
-// func AddMove(move string) {
+func (gm *GameMoves) IsNextMoveValidMove(nextMove square) bool {
 
-// }
+	if gm.isFirstMove() && gm.isBlack() && gm.isInvalidBlackFirstMove(nextMove) {
+		return false
+	}
+
+	lastMove := gm.queenMoves[len(gm.queenMoves)-1]
+
+	lastMoveSquare := lastMove.square
+	nextMoveSquare := nextMove
+
+	validDestinations, exists := gm.validMoves[lastMoveSquare]
+	if !exists {
+		return false
+	}
+
+	isValid := validDestinations[nextMoveSquare]
+
+	return isValid
+}
+
+func (gm *GameMoves) AddMove(move square) {
+	if !gm.IsNextMoveValidMove(move) {
+		panic("Move inserted is invalid")
+	}
+	gm.queenMoves = append(gm.queenMoves, newQueenMove(move))
+}
 
 func initValidMoves(filepath string) (validMoves, error) {
 	parser := parsers.NewJSONParser()
@@ -61,39 +92,18 @@ func initValidMoves(filepath string) (validMoves, error) {
 	return vm, nil
 }
 
-func (gm *GameMoves) IsNextMoveValidMove(nextMove string) bool {
-
-	if gm.IsFirstMove() && gm.isBlack() && gm.isInvalidBlackFirstMove(nextMove) {
-		return false
-	}
-
-	lastMove := gm.queenMoves[len(gm.queenMoves)-1]
-
-	currentSquare := square(lastMove.square)
-	nextSquare := square(nextMove)
-
-	validDestinations, exists := gm.validMoves[currentSquare]
-	if !exists {
-		return false
-	}
-
-	isValid := validDestinations[nextSquare]
-
-	return isValid
-}
-
-func (gm *GameMoves) IsFirstMove() bool {
+func (gm *GameMoves) isFirstMove() bool {
 	return len(gm.queenMoves) == 0
 }
 
-func (gm *GameMoves) isInvalidBlackFirstMove(firstMove string) bool {
+func (gm *GameMoves) isInvalidBlackFirstMove(firstMove square) bool {
 	return firstMove != "Qg8" && firstMove != "Qh8"
 }
 
 func (gm *GameMoves) isBlack() bool {
-	return gm.color == "black"
+	return gm.color == BLACK
 }
 
 func (gm *GameMoves) isWhite() bool {
-	return gm.color == "white"
+	return gm.color == WHITE
 }
