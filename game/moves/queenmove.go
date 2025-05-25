@@ -1,28 +1,15 @@
 package moves
 
 type queenMove struct {
-	currentSquare string
+	square square
 }
 
-func newQueenMove(previous string, new string) queenMove {
+func newQueenMove(newSquare square) queenMove {
 	return queenMove{
-		currentSquare: new,
+		square: newSquare,
 	}
 }
 
-func (q queenMove) isFirstMove(previous *queenMove) bool {
-	return previous == nil
-}
-
-// TODO: move into gamemoves
-func (q queenMove) getDirection(previous *queenMove) string {
-	if q.isFirstMove(previous) && q.currentSquare == "Qf8" {
-		return "right"
-	}
-
-	if previous != nil && q.currentSquare > previous.currentSquare {
-		return "right"
-	}
-
-	return "left"
+func (qm *queenMove) Square() square {
+	return qm.square
 }
