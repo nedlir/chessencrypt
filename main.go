@@ -1,13 +1,8 @@
 package main
 
-import (
-	"chessencryption/game/moves"
-	"fmt"
-)
+import "chessencryption/chess/game"
 
 func main() {
-	game := moves.NewGameMoves("black")
-
-	fmt.Print(game)
+	game.RunGame()
 
 }
