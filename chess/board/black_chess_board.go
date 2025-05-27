@@ -1,9 +1,5 @@
 package board
 
-import (
-	. "chessencryption/chess/constants"
-)
-
 type BlackChessBoard struct {
 	queenMoves    []Square
 	moveValidator *MoveValidator

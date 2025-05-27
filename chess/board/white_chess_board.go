@@ -1,9 +1,5 @@
 package board
 
-import (
-	. "chessencryption/chess/constants"
-)
-
 const WHITE_QUEEN_MOVE_ZERO string = "..."
 
 type WhiteChessBoard struct {

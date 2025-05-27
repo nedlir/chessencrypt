@@ -1,7 +1,6 @@
 package board
 
 import (
-	. "chessencryption/chess/constants"
 	"chessencryption/parsers"
 	"fmt"
 )
