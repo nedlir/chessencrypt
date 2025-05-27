@@ -1,16 +1,14 @@
 package board
 
 type BlackChessBoard struct {
-	queenMoves    []Square
-	moveValidator *MoveValidator
-	squares       BlackBoardMatrix
+	queenMoves []Square
+	squares    BlackBoardMatrix
 }
 
-func NewBlackBoard(mv *MoveValidator) *BlackChessBoard {
+func NewBlackBoard() *BlackChessBoard {
 	board := &BlackChessBoard{
-		queenMoves:    []Square{},
-		moveValidator: mv,
-		squares:       BlackQueenLayout,
+		queenMoves: []Square{},
+		squares:    BlackQueenLayout,
 	}
 	return board
 }
