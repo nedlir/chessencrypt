@@ -12,8 +12,8 @@ func NewBlackBoard() BlackChessBoard {
 	}
 }
 
-func (cb *BlackChessBoard) AddMove(nextMove Square) {
-	cb.queenMoves = append(cb.queenMoves, NewSquare(nextMove))
+func (cb *BlackChessBoard) AddMove(nextMove *Square) {
+	cb.queenMoves = append(cb.queenMoves, *nextMove)
 }
 
 func (cb *BlackChessBoard) GetQueenPosition() Square {

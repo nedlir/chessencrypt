@@ -7,15 +7,15 @@ type WhiteChessBoard struct {
 	board      WhiteBoardMatrix
 }
 
-func NewWhiteBoard(firstBitValue int) WhiteChessBoard {
+func NewWhiteBoard() WhiteChessBoard {
 	return WhiteChessBoard{
 		queenMoves: []Square{},
 		board:      WhiteQueenLayout,
 	}
 }
 
-func (cb *WhiteChessBoard) AddMove(move Square) {
-	cb.queenMoves = append(cb.queenMoves, move)
+func (cb *WhiteChessBoard) AddMove(nextMove *Square) {
+	cb.queenMoves = append(cb.queenMoves, *nextMove)
 }
 
 func (cb *WhiteChessBoard) GetQueenPosition() Square {

@@ -2,6 +2,8 @@ package game
 
 import (
 	"chessencryption/chess/algorithm"
+	. "chessencryption/chess/board"
+
 	"fmt"
 )
 
@@ -20,26 +22,33 @@ func Run() {
 
 	var algo algorithm.Algorithm = algorithm.NewAlgorithm(matrix)
 	// var mv *board.MoveValidator = board.NewMoveValidator()
-	// var blackBoard *board.BlackChessBoard = board.NewBlackBoard()
-	// var whiteBoard *board.WhiteChessBoard = board.NewWhiteBoard(0)
+	var blackBoard BlackChessBoard = NewBlackBoard()
+	var whiteBoard WhiteChessBoard = NewWhiteBoard()
 
 	fmt.Println("My expected matrix: ")
 	for _, row := range matrix {
 		fmt.Printf("%v\n", row)
 	}
 
-	for !algo.IsGameFinished() {
-		algo.FindNextBitToSet()
+	var isGameFinished bool = false
+	var isNextWhiteMoveOneStep bool = false
+	var nextWhiteMove Square
+	var nextBlackMove Square
 
-		target := algo.NextPosition()
-		fmt.Printf("Next 1st bit square: [%d][%d]\n", target.Row(), target.Column())
+	for !isGameFinished {
+		nextWhiteMove, isGameFinished = algo.DetermineNextWhiteMove(&whiteBoard)
 
-		// right now the queen hasn't moved yet
-		cur := algo.CurrentPosition()
-		fmt.Printf("currently at:       [%d][%d]\n\n", cur.Row(), cur.Column())
+		isNextWhiteMoveOneStep = isReachableByWhiteQueen(nextWhiteMove.Name())
 
-		algo.ApplyNextMove()
+		nextBlackMove = algo.DetermineNextBlackMove(isNextWhiteMoveOneStep)
+
+		whiteBoard.AddMove(&nextWhiteMove)
+		blackBoard.AddMove(&nextBlackMove)
+
+		algo.SetCurrentSquare(&nextWhiteMove)
 	}
-
-	// blackBoard.AddMove(board.NewSquareZero("d7"))
 }
+
+// TODO:
+// write isReachableByWhiteQueen
+// print the pgn for testing

@@ -60,7 +60,6 @@ import (
 type Algorithm struct {
 	bitMatrix     [][]int
 	currentSquare Square
-	nextSquare    Square
 	moveValidator MoveValidator
 }
 
@@ -70,12 +69,7 @@ func NewAlgorithm(b [][]int) Algorithm {
 		currentSquare: NewSquare(
 			"a6",
 			0,
-			NewPosition(0, 0),
-		),
-		nextSquare: NewSquare(
-			"a6",
-			0,
-			NewPosition(0, 0),
+			NewPosition(0, 1),
 		),
 	}
 }
@@ -99,31 +93,34 @@ func (a *Algorithm) DetermineFEN(fen string) string {
 	}
 }
 
-func (a *Algorithm) FindNextBitToSet(cb *WhiteChessBoard) {
-	currentPosition := a.currentSquare.Position()
-	nextPosition := a.nextSquare.Position() // maybe add 3rd watcher
+func (a *Algorithm) DetermineNextWhiteMove(cb *WhiteChessBoard) (square Square, isExist bool) {
+	currentPos := a.currentSquare.Position()
 
-	for row := currentPosition.Row(); row < WhiteBoardRowsLength; row++ {
-		for col := currentPosition.Column(); col < WhiteBoardColsLength; col++ {
-			bit := a.bitMatrix[row][col]
-			if bit == 1 {
-				a.nextSquare = NewSquare(
+	for row := currentPos.Row(); row < WhiteBoardRowsLength; row++ {
+		startCol := 0
+		if row == currentPos.Row() {
+			startCol = currentPos.Column()
+		}
+		for col := startCol; col < WhiteBoardColsLength; col++ {
+			if a.bitMatrix[row][col] == 1 {
+				isExist = true
+				return NewSquare(
 					cb.Board()[row][col],
 					1,
-					NewPosition(row, col),
-				)
-				return
+					NewPosition(row, col)), isExist
 			}
 		}
 	}
+	isExist = false
+	return Square{}, isExist
 }
 
 func (a *Algorithm) CurrentSquare() Square {
 	return a.currentSquare
 }
 
-func (a *Algorithm) NextSquare() Square {
-	return a.nextSquare
+func (a *Algorithm) SetCurrentSquare(square *Square) {
+	a.currentSquare = *square
 }
 
 func (a *Algorithm) DetermineNextBlackMove(isNextMoveAssistance bool) string {
@@ -149,9 +146,4 @@ func (a *Algorithm) DetermineNextBlackMove(isNextMoveAssistance bool) string {
 
 	}
 	return "f"
-}
-
-func (a *Algorithm) DetermineNextWhiteMove() string {
-	// isValidNextWhiteMove()
-	return "a"
 }
