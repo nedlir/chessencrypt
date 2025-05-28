@@ -52,36 +52,35 @@
 package algorithm
 
 import (
+	. "chessencryption/chess/board"
 	. "chessencryption/chess/fen"
 	"fmt"
 )
 
-type Position struct {
-	row    int
-	column int
-}
-
-func (p *Position) Row() int {
-	return p.row
-}
-
-func (p *Position) Column() int {
-	return p.column
-}
-
 type Algorithm struct {
-	bitMatrix       [][]int
-	currentPosition Position
-	nextPosition    Position
-	scanPosition    Position
+	bitMatrix     [][]int
+	currentSquare Square
+	nextSquare    Square
+	moveValidator MoveValidator
 }
 
 func NewAlgorithm(b [][]int) Algorithm {
-	return Algorithm{bitMatrix: b, currentPosition: Position{0, 0}, nextPosition: Position{0, 0}, scanPosition: Position{0, 0}}
+	return Algorithm{
+		bitMatrix: b,
+		currentSquare: NewSquare(
+			"a6",
+			0,
+			NewPosition(0, 0),
+		),
+		nextSquare: NewSquare(
+			"a6",
+			0,
+			NewPosition(0, 0),
+		),
+	}
 }
 
 func (a *Algorithm) PrintBitMatrix() {
-
 	for row := 0; row < len(a.bitMatrix); row++ {
 		for col := 0; col < len(a.bitMatrix[0]); col++ {
 			fmt.Printf("%d ", a.bitMatrix[row][col])
@@ -100,64 +99,59 @@ func (a *Algorithm) DetermineFEN(fen string) string {
 	}
 }
 
-// For now will use brute-force -
-// queen will finish 1 line,
-// then queen will go down a line
-// then queen will move to square [row][col=0] and will continue scanning from there.
-// meaning I will add 2 assistance moves for the queen and total of 4 in general
-// TODO: optimize this by finding shortest path....
+func (a *Algorithm) FindNextBitToSet(cb *WhiteChessBoard) {
+	currentPosition := a.currentSquare.Position()
+	nextPosition := a.nextSquare.Position() // maybe add 3rd watcher
 
-func (a *Algorithm) FindNextBitToSet() {
-	rows, cols := len(a.bitMatrix), len(a.bitMatrix[0])
-	for r := a.scanPosition.row; r < rows; r++ {
-		startC := a.scanPosition.column
-		if r > a.scanPosition.row {
-			startC = 0
-		}
-		for c := startC; c < cols; c++ {
-			if a.bitMatrix[r][c] == 1 {
-				// record it
-				a.nextPosition = Position{r, c}
-				// advance the scan cursor for next time
-				if c+1 < cols {
-					a.scanPosition = Position{r, c + 1}
-				} else {
-					a.scanPosition = Position{r + 1, 0}
-				}
+	for row := currentPosition.Row(); row < WhiteBoardRowsLength; row++ {
+		for col := currentPosition.Column(); col < WhiteBoardColsLength; col++ {
+			bit := a.bitMatrix[row][col]
+			if bit == 1 {
+				a.nextSquare = NewSquare(
+					cb.Board()[row][col],
+					1,
+					NewPosition(row, col),
+				)
 				return
 			}
 		}
 	}
-	// no more bits
-	a.scanPosition = Position{rows, 0}
 }
 
-func (a *Algorithm) NextPosition() Position {
-	return a.nextPosition
+func (a *Algorithm) CurrentSquare() Square {
+	return a.currentSquare
 }
 
-func (a *Algorithm) CurrentPosition() Position {
-	return a.currentPosition
+func (a *Algorithm) NextSquare() Square {
+	return a.nextSquare
 }
 
-func (a *Algorithm) DetermineNextBlackMove() string {
-	// isValidNextBlackMove()
+func (a *Algorithm) DetermineNextBlackMove(isNextMoveAssistance bool) string {
+	var nextSquare Square
+	if isNextMoveAssistance {
+		switch a.currentSquare.Name() {
+		case "Qe8", "Qf8":
+			nextSquare.SetName("Qh8")
+		case "Qg8", "Qh8":
+			nextSquare.SetName("Qe8")
+		}
+	} else { // next move is supposed to mark the bit
+		switch a.currentSquare.Name() {
+		case "Qe8":
+			nextSquare.SetName("Qf8")
+		case "Qf8":
+			nextSquare.SetName("Qg8")
+		case "Qg8":
+			nextSquare.SetName("Qh8")
+		case "Qh8":
+			nextSquare.SetName("Qg8")
+		}
+
+	}
 	return "f"
 }
 
 func (a *Algorithm) DetermineNextWhiteMove() string {
 	// isValidNextWhiteMove()
 	return "a"
-}
-
-func (a *Algorithm) IsGameFinished() bool {
-	return a.scanPosition.row >= len(a.bitMatrix)
-}
-
-// func (cb *WhiteChessBoard) IsNextMoveValidMove(nextMove Square) bool {
-// 	return cb.moveValidator.IsNextMoveValidMove(cb.queenMoves, nextMove)
-// }
-
-func (a *Algorithm) ApplyNextMove() {
-	a.currentPosition = a.nextPosition
 }

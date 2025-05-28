@@ -4,27 +4,28 @@ const WHITE_QUEEN_MOVE_ZERO string = "..."
 
 type WhiteChessBoard struct {
 	queenMoves []Square
-	squares    WhiteBoardMatrix
+	board      WhiteBoardMatrix
 }
 
-func NewWhiteBoard(firstBitValue int) *WhiteChessBoard {
-
-	// TODO: this will be determined by the
-	if firstBitValue != 0 && firstBitValue != 1 {
-		panic("first bit must be a 0 or a 1")
-	}
-
-	board := &WhiteChessBoard{
+func NewWhiteBoard(firstBitValue int) WhiteChessBoard {
+	return WhiteChessBoard{
 		queenMoves: []Square{},
-		squares:    WhiteQueenLayout,
+		board:      WhiteQueenLayout,
 	}
-
-	var zeroWhiteMove Square = NewSquare(WHITE_QUEEN_MOVE_ZERO, firstBitValue)
-	board.queenMoves = append(board.queenMoves, zeroWhiteMove)
-
-	return board
 }
 
 func (cb *WhiteChessBoard) AddMove(move Square) {
 	cb.queenMoves = append(cb.queenMoves, move)
+}
+
+func (cb *WhiteChessBoard) GetQueenPosition() Square {
+	return cb.queenMoves[len(cb.queenMoves)-1]
+}
+
+func (cb *WhiteChessBoard) Board() WhiteBoardMatrix {
+	return cb.board
+}
+
+func (cb *WhiteChessBoard) GetSquareName(position Position) string {
+	return cb.Board()[position.row][position.column]
 }
