@@ -1,71 +1,24 @@
-// // Pseudo code of the algorithm, need to check
-// package algorithm
-
-// func generateNextMove(color string, gm *GameMoves) {
-
-// 	targetSquare := getLocationOfNextBitToSet()
-
-// 	if color == BLACK {
-// 		generateNextBlackMove(targetSquare)
-// 	} else {
-// 		generateNextWhiteMove(targetSquare)
-// 	}
-// }
-
-// func generateNextWhiteMove(targetSquare square) square{
-// 		isReachableByBlackQueen() {
-// 			generateSingleRowMoveForWhite()
-// 		}
-// 		else{
-// 			generateMultiRowMoveForWhite()
-// 		}
-// }
-
-// func generateNextBlackMove(targetSquare square) square{
-// 	isVerticalMove()
-// 		{
-// 			return generateMultiSquareMoveForBlack()
-// 		}
-// 		else{
-// 			generateSingleSquareMoveForBlack()
-// 		}
-// 	}
-
-// func getLocationOfBitToSet(will receive the bits matrix) square{
-// 	check where is the location of next bit that needs to be drawn.
-// 	will have to traverse the matrix to find the next bit that needs to be set.
-// 	need to think if I want to traverse the matrix with a for loop
-// 	maybe it is better to just keep the current column and index in the object.
-// 	then to do a while loop until EOF.
-
-// 	This funciton will just return matrix[i][j] with the name of the square
-// }
-
-// func isReachableByBlackQueen() bool {
-// }
-
-// func isVerticalMove() bool {
-// 	// this means that the Black Queen will just move down a row,
-// 	// need to come up with a better variable name for this
-// }
-
 package algorithm
 
 import (
+	"chessencryption/bitshandler"
 	. "chessencryption/chess/board"
 	. "chessencryption/chess/fen"
 	"fmt"
 )
 
 type Algorithm struct {
-	bitMatrix     [][]int
+	bitMatrix     []byte
 	currentSquare Square
-	moveValidator MoveValidator
+	moveValidator *MoveValidator
+	bitHandler    *bitshandler.BitHandler
 }
 
-func NewAlgorithm(b [][]int) Algorithm {
+func NewAlgorithm(b []byte, bh *bitshandler.BitHandler, mv *MoveValidator) Algorithm {
 	return Algorithm{
-		bitMatrix: b,
+		bitMatrix:     b,
+		bitHandler:    bh,
+		moveValidator: mv,
 		currentSquare: NewSquare(
 			"a6",
 			0,
@@ -75,16 +28,19 @@ func NewAlgorithm(b [][]int) Algorithm {
 }
 
 func (a *Algorithm) PrintBitMatrix() {
+	fmt.Println("Bit matrix representation:")
 	for row := 0; row < len(a.bitMatrix); row++ {
-		for col := 0; col < len(a.bitMatrix[0]); col++ {
-			fmt.Printf("%d ", a.bitMatrix[row][col])
+		fmt.Printf("Row %d (0b%08b): ", row, a.bitMatrix[row])
+		for col := 0; col < 8; col++ {
+			bit := (a.bitMatrix[row] >> col) & 1
+			fmt.Printf("%d ", bit)
 		}
 		fmt.Println()
 	}
 }
 
 func (a *Algorithm) DetermineFEN(fen string) string {
-	var firstBit int = a.bitMatrix[0][0]
+	var firstBit int = int(a.bitMatrix[0] & 1)
 
 	if firstBit == 0 {
 		return FENZero
@@ -94,25 +50,31 @@ func (a *Algorithm) DetermineFEN(fen string) string {
 }
 
 func (a *Algorithm) DetermineNextWhiteMove(cb *WhiteChessBoard) (square Square, isExist bool) {
-	currentPos := a.currentSquare.Position()
+	position, found := a.bitHandler.FindNextSetBitPosition()
 
-	for row := currentPos.Row(); row < WhiteBoardRowsLength; row++ {
-		startCol := 0
-		if row == currentPos.Row() {
-			startCol = currentPos.Column()
-		}
-		for col := startCol; col < WhiteBoardColsLength; col++ {
-			if a.bitMatrix[row][col] == 1 {
-				isExist = true
-				return NewSquare(
-					cb.Board()[row][col],
-					1,
-					NewPosition(row, col)), isExist
+	if !found {
+		return Square{}, false
+	}
+
+	if position.Row() < WhiteBoardRowsLength && position.Column() < WhiteBoardColsLength {
+		squareName := cb.Board()[position.Row()][position.Column()]
+		newSquare := NewSquare(
+			squareName,
+			1,
+			NewPosition(position.Row(), position.Column()),
+		)
+
+		if a.moveValidator != nil && a.currentSquare.Name() != "" {
+			valid := a.moveValidator.IsNextMoveValidMove(a.currentSquare, newSquare)
+			if !valid {
+				fmt.Printf("Invalid move from %s to %s, skipping...\n", a.currentSquare.Name(), squareName)
 			}
 		}
+
+		return newSquare, true
 	}
-	isExist = false
-	return Square{}, isExist
+
+	return Square{}, false
 }
 
 func (a *Algorithm) CurrentSquare() Square {
@@ -123,27 +85,52 @@ func (a *Algorithm) SetCurrentSquare(square *Square) {
 	a.currentSquare = *square
 }
 
-func (a *Algorithm) DetermineNextBlackMove(isNextMoveAssistance bool) string {
+func (a *Algorithm) DetermineNextBlackMove(isNextMoveAssistance bool, cb *WhiteChessBoard) Square {
 	var nextSquare Square
+	var targetPosition Position
+
+	squarePositions := map[string]Position{
+		"Qe8": NewPosition(0, 4),
+		"Qf8": NewPosition(0, 5),
+		"Qg8": NewPosition(0, 6),
+		"Qh8": NewPosition(0, 7),
+	}
+
 	if isNextMoveAssistance {
 		switch a.currentSquare.Name() {
 		case "Qe8", "Qf8":
-			nextSquare.SetName("Qh8")
+			targetPosition = squarePositions["Qh8"]
 		case "Qg8", "Qh8":
-			nextSquare.SetName("Qe8")
+			targetPosition = squarePositions["Qe8"]
 		}
 	} else { // next move is supposed to mark the bit
 		switch a.currentSquare.Name() {
 		case "Qe8":
-			nextSquare.SetName("Qf8")
+			targetPosition = squarePositions["Qf8"]
 		case "Qf8":
-			nextSquare.SetName("Qg8")
+			targetPosition = squarePositions["Qg8"]
 		case "Qg8":
-			nextSquare.SetName("Qh8")
+			targetPosition = squarePositions["Qh8"]
 		case "Qh8":
-			nextSquare.SetName("Qg8")
+			targetPosition = squarePositions["Qg8"]
 		}
-
 	}
-	return "f"
+
+	squareName := GetSquareName(targetPosition, cb.Board())
+
+	binaryValue := 0
+	if !isNextMoveAssistance {
+		binaryValue = 1
+	}
+
+	nextSquare = NewSquare(squareName, binaryValue, targetPosition)
+	return nextSquare
+}
+
+func (a *Algorithm) GetBitHandler() *bitshandler.BitHandler {
+	return a.bitHandler
+}
+
+func (a *Algorithm) GetMoveValidator() *MoveValidator {
+	return a.moveValidator
 }

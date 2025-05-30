@@ -23,15 +23,30 @@ func NewMoveValidator() *MoveValidator {
 	}
 }
 
-func (mv *MoveValidator) IsNextMoveValidMove(queenMoves []Square, nextMove Square) bool {
-	var lastMove Square = queenMoves[len(queenMoves)-1]
-
-	validDestinations, exists := mv.possibleQueenMoves[lastMove]
+func (mv *MoveValidator) IsNextMoveValidMove(currentSquare, nextMove Square) bool {
+	validDestinations, exists := mv.possibleQueenMoves[currentSquare]
 	if !exists {
 		return false
 	}
 
 	return validDestinations[nextMove]
+}
+
+func squareNameToPosition(squareName string) Position {
+	if len(squareName) != 2 {
+		return NewPosition(0, 0)
+	}
+
+	col := int(squareName[0] - 'a')
+
+	row := 8 - int(squareName[1]-'0')
+
+	return NewPosition(row, col)
+}
+
+func newSquareFromName(squareName string) Square {
+	position := squareNameToPosition(squareName)
+	return NewSquare(squareName, 0, position)
 }
 
 func initQueenValidMoves(filepath string) (queenValidMovesMap, error) {
@@ -44,10 +59,11 @@ func initQueenValidMoves(filepath string) (queenValidMovesMap, error) {
 
 	vm := make(queenValidMovesMap)
 	for key, valueMap := range data {
-		sq := NewSquareZero(key)
+		sq := newSquareFromName(key)
 		vm[sq] = make(queenValidDestinationsPerSquare)
+
 		for value := range valueMap {
-			vm[sq][NewSquareZero(value)] = true
+			vm[sq][newSquareFromName(value)] = true
 		}
 	}
 

@@ -12,19 +12,7 @@ type BitHandler struct {
 	allPositions []board.Position
 }
 
-func NewBitHandler(intMatrix [][]int) *BitHandler {
-	byteMatrix := make([]byte, len(intMatrix))
-
-	for row := 0; row < len(intMatrix); row++ {
-		var rowByte byte = 0
-		for col := 0; col < len(intMatrix[row]); col++ {
-			if intMatrix[row][col] == 1 {
-				rowByte |= (1 << col)
-			}
-		}
-		byteMatrix[row] = rowByte
-	}
-
+func NewBitHandler(byteMatrix []byte) *BitHandler {
 	bh := &BitHandler{
 		matrix:       byteMatrix,
 		currentIndex: 0,
@@ -50,13 +38,13 @@ func (bh *BitHandler) findAllSetBits() []board.Position {
 	for rowIndex, rowByte := range bh.matrix {
 		setCols := bh.findSetBitPositions(rowByte)
 		for _, colIndex := range setCols {
-			results = append(results, board.Position{Row: rowIndex, Col: colIndex})
+			results = append(results, board.NewPosition(rowIndex, colIndex))
 		}
 	}
 	return results
 }
 
-func (bh *BitHandler) GetNextSetBitPosition() (board.Position, bool) {
+func (bh *BitHandler) FindNextSetBitPosition() (board.Position, bool) {
 	if bh.currentIndex >= len(bh.allPositions) {
 		return board.Position{}, false // No more set bits
 	}
@@ -70,7 +58,7 @@ func (bh *BitHandler) HasMoreBits() bool {
 	return bh.currentIndex < len(bh.allPositions)
 }
 
-func (bh *BitHandler) GetAllSetBits() []board.Position {
+func (bh *BitHandler) AllSetBits() []board.Position {
 	return bh.allPositions
 }
 
@@ -82,4 +70,8 @@ func (bh *BitHandler) PrintPositions() {
 
 func (bh *BitHandler) Reset() {
 	bh.currentIndex = 0
+}
+
+func (bh *BitHandler) Matrix() []byte {
+	return bh.matrix
 }

@@ -8,32 +8,28 @@ import (
 )
 
 func Run() {
-	// for development testing, need to write tests for few cases
-	// matrix without assistance moves
-	matrix := [][]int{
-		{0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 0, 1, 0, 1, 0, 1, 0},
-		{0, 1, 0, 1, 0, 1, 0, 0},
-		{1, 1, 1, 1, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 1, 1, 1},
+	// Matrix represented as bytes for efficient bit operations
+	// TODO: produce more matrices like this with test cases for edge cases and different values
+	matrixRows := []byte{
+		0b01011010, // row 0: bits at positions 1,3,4,6
+		0b10100101, // row 1: bits at positions 0,2,5,7
+		0b00110110, // row 2: bits at positions 1,2,5,6
+		0b11001001, // row 3: bits at positions 0,3,6,7
+		0b01101100, // row 4: bits at positions 2,3,5,6
+		0b10010011, // row 5: bits at positions 0,1,4,7
 	}
-	// TODO: add matrix with assistance moves
 
-	// Initialize BitHandler with the matrix
-	var bitHandler *bitshandler.BitHandler = bitshandler.NewBitHandler(matrix)
+	var bitHandler *bitshandler.BitHandler = bitshandler.NewBitHandler(matrixRows)
 
-	// Initialize Algorithm with BitHandler
-	var algo algorithm.Algorithm = algorithm.NewAlgorithm(matrix, bitHandler)
+	var moveValidator *MoveValidator = NewMoveValidator()
 
-	// var mv *board.MoveValidator = board.NewMoveValidator()
+	var algo algorithm.Algorithm = algorithm.NewAlgorithm(matrixRows, bitHandler, moveValidator)
+
 	var blackBoard BlackChessBoard = NewBlackBoard()
 	var whiteBoard WhiteChessBoard = NewWhiteBoard()
 
-	fmt.Println("My expected matrix: ")
-	for _, row := range matrix {
-		fmt.Printf("%v\n", row)
-	}
+	fmt.Println(" expected matrix (as bytes):")
+	algo.PrintBitMatrix()
 
 	fmt.Println("\nSet bit positions found by BitHandler:")
 	bitHandler.PrintPositions()
@@ -53,9 +49,9 @@ func Run() {
 				nextWhiteMove.Position().Row(),
 				nextWhiteMove.Position().Column())
 
-			isNextWhiteMoveOneStep = isReachableByWhiteQueen(nextWhiteMove.Name())
+			isNextWhiteMoveOneStep = moveValidator.IsNextMoveValidMove(algo.CurrentSquare(), nextWhiteMove)
 
-			nextBlackMove = algo.DetermineNextBlackMove(isNextWhiteMoveOneStep)
+			nextBlackMove = algo.DetermineNextBlackMove(isNextWhiteMoveOneStep, &whiteBoard)
 
 			whiteBoard.AddMove(&nextWhiteMove)
 			blackBoard.AddMove(&nextBlackMove)
