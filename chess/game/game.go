@@ -1,9 +1,9 @@
 package game
 
 import (
+	"chessencryption/bitshandler"
 	"chessencryption/chess/algorithm"
 	. "chessencryption/chess/board"
-
 	"fmt"
 )
 
@@ -20,7 +20,12 @@ func Run() {
 	}
 	// TODO: add matrix with assistance moves
 
-	var algo algorithm.Algorithm = algorithm.NewAlgorithm(matrix)
+	// Initialize BitHandler with the matrix
+	var bitHandler *bitshandler.BitHandler = bitshandler.NewBitHandler(matrix)
+
+	// Initialize Algorithm with BitHandler
+	var algo algorithm.Algorithm = algorithm.NewAlgorithm(matrix, bitHandler)
+
 	// var mv *board.MoveValidator = board.NewMoveValidator()
 	var blackBoard BlackChessBoard = NewBlackBoard()
 	var whiteBoard WhiteChessBoard = NewWhiteBoard()
@@ -30,6 +35,10 @@ func Run() {
 		fmt.Printf("%v\n", row)
 	}
 
+	fmt.Println("\nSet bit positions found by BitHandler:")
+	bitHandler.PrintPositions()
+	fmt.Println()
+
 	var isGameFinished bool = false
 	var isNextWhiteMoveOneStep bool = false
 	var nextWhiteMove Square
@@ -38,17 +47,22 @@ func Run() {
 	for !isGameFinished {
 		nextWhiteMove, isGameFinished = algo.DetermineNextWhiteMove(&whiteBoard)
 
-		isNextWhiteMoveOneStep = isReachableByWhiteQueen(nextWhiteMove.Name())
+		if !isGameFinished {
+			fmt.Printf("Next white move: %s at position (%d, %d)\n",
+				nextWhiteMove.Name(),
+				nextWhiteMove.Position().Row(),
+				nextWhiteMove.Position().Column())
 
-		nextBlackMove = algo.DetermineNextBlackMove(isNextWhiteMoveOneStep)
+			isNextWhiteMoveOneStep = isReachableByWhiteQueen(nextWhiteMove.Name())
 
-		whiteBoard.AddMove(&nextWhiteMove)
-		blackBoard.AddMove(&nextBlackMove)
+			nextBlackMove = algo.DetermineNextBlackMove(isNextWhiteMoveOneStep)
 
-		algo.SetCurrentSquare(&nextWhiteMove)
+			whiteBoard.AddMove(&nextWhiteMove)
+			blackBoard.AddMove(&nextBlackMove)
+
+			algo.SetCurrentSquare(&nextWhiteMove)
+		}
 	}
-}
 
-// TODO:
-// write isReachableByWhiteQueen
-// print the pgn for testing
+	fmt.Println("Game finished! All set bits have been processed.")
+}
