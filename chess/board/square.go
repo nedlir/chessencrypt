@@ -37,3 +37,7 @@ func (s *Square) SetName(name string) {
 func (s *Square) BinaryValue() int {
 	return s.binaryValue
 }
+
+func GetSquareName(position Position, board WhiteBoardMatrix) string {
+	return board[position.Row()][position.Column()]
+}
