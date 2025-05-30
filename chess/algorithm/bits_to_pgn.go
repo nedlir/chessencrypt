@@ -1,7 +1,7 @@
 package algorithm
 
 import (
-	"chessencryption/bitshandler"
+	bithandler "chessencryption/bitshandler"
 	. "chessencryption/chess/board"
 	. "chessencryption/chess/fen"
 	"fmt"
@@ -11,10 +11,10 @@ type Algorithm struct {
 	bitMatrix     []byte
 	currentSquare Square
 	moveValidator *MoveValidator
-	bitHandler    *bitshandler.BitHandler
+	bitHandler    *bithandler.BitsHandler
 }
 
-func NewAlgorithm(b []byte, bh *bitshandler.BitHandler, mv *MoveValidator) Algorithm {
+func NewAlgorithm(b []byte, bh *bithandler.BitsHandler, mv *MoveValidator) Algorithm {
 	return Algorithm{
 		bitMatrix:     b,
 		bitHandler:    bh,
@@ -127,7 +127,7 @@ func (a *Algorithm) DetermineNextBlackMove(isNextMoveAssistance bool, cb *WhiteC
 	return nextSquare
 }
 
-func (a *Algorithm) GetBitHandler() *bitshandler.BitHandler {
+func (a *Algorithm) GetBitHandler() *bithandler.BitsHandler {
 	return a.bitHandler
 }
 

@@ -1,4 +1,4 @@
-package bitshandler
+package bithandler
 
 import (
 	"chessencryption/chess/board"
@@ -6,14 +6,14 @@ import (
 	"math/bits"
 )
 
-type BitHandler struct {
+type BitsHandler struct {
 	matrix       []byte
 	currentIndex int
 	allPositions []board.Position
 }
 
-func NewBitHandler(byteMatrix []byte) *BitHandler {
-	bh := &BitHandler{
+func NewBitHandler(byteMatrix []byte) *BitsHandler {
+	bh := &BitsHandler{
 		matrix:       byteMatrix,
 		currentIndex: 0,
 	}
@@ -23,7 +23,7 @@ func NewBitHandler(byteMatrix []byte) *BitHandler {
 	return bh
 }
 
-func (bh *BitHandler) findSetBitPositions(b byte) []int {
+func (bh *BitsHandler) findSetBitPositions(b byte) []int {
 	positions := make([]int, 0, bits.OnesCount8(b))
 	for b != 0 {
 		pos := bits.TrailingZeros8(b)
@@ -33,7 +33,7 @@ func (bh *BitHandler) findSetBitPositions(b byte) []int {
 	return positions
 }
 
-func (bh *BitHandler) findAllSetBits() []board.Position {
+func (bh *BitsHandler) findAllSetBits() []board.Position {
 	var results []board.Position
 	for rowIndex, rowByte := range bh.matrix {
 		setCols := bh.findSetBitPositions(rowByte)
@@ -44,7 +44,7 @@ func (bh *BitHandler) findAllSetBits() []board.Position {
 	return results
 }
 
-func (bh *BitHandler) FindNextSetBitPosition() (board.Position, bool) {
+func (bh *BitsHandler) FindNextSetBitPosition() (board.Position, bool) {
 	if bh.currentIndex >= len(bh.allPositions) {
 		return board.Position{}, false // No more set bits
 	}
@@ -54,24 +54,24 @@ func (bh *BitHandler) FindNextSetBitPosition() (board.Position, bool) {
 	return position, true
 }
 
-func (bh *BitHandler) HasMoreBits() bool {
+func (bh *BitsHandler) HasMoreBits() bool {
 	return bh.currentIndex < len(bh.allPositions)
 }
 
-func (bh *BitHandler) AllSetBits() []board.Position {
+func (bh *BitsHandler) AllSetBits() []board.Position {
 	return bh.allPositions
 }
 
-func (bh *BitHandler) PrintPositions() {
+func (bh *BitsHandler) PrintPositions() {
 	for _, pos := range bh.allPositions {
 		fmt.Printf("1 at row %d, col %d\n", pos.Row(), pos.Column())
 	}
 }
 
-func (bh *BitHandler) Reset() {
+func (bh *BitsHandler) Reset() {
 	bh.currentIndex = 0
 }
 
-func (bh *BitHandler) Matrix() []byte {
+func (bh *BitsHandler) Matrix() []byte {
 	return bh.matrix
 }

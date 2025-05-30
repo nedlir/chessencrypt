@@ -1,7 +1,7 @@
 package game
 
 import (
-	"chessencryption/bitshandler"
+	bithandler "chessencryption/bitshandler"
 	"chessencryption/chess/algorithm"
 	. "chessencryption/chess/board"
 	"fmt"
@@ -19,7 +19,7 @@ func Run() {
 		0b10010011, // row 5: bits at positions 0,1,4,7
 	}
 
-	var bitHandler *bitshandler.BitHandler = bitshandler.NewBitHandler(matrixRows)
+	var bitHandler *bithandler.BitsHandler = bithandler.NewBitHandler(matrixRows)
 
 	var moveValidator *MoveValidator = NewMoveValidator()
 
