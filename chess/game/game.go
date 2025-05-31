@@ -10,9 +10,10 @@ import (
 
 func Run() {
 	matrix := []byte{
-		0b01011010,
-		0b10100101,
+		// 0b01011010,
+		// 0b10100101,
 		0b00110110,
+		// 0b00000001,
 		// 0b11001001,
 		// 0b01101100,
 		// 0b10010111,
@@ -30,6 +31,9 @@ func Run() {
 	fmt.Println()
 
 	for {
+
+		bh.PrintPositions()
+		return
 		wMove, isNextMove := algo.DetermineNextWhiteMove(&white)
 		if !isNextMove {
 			fmt.Println("Game finished! All set bits have been processed.")

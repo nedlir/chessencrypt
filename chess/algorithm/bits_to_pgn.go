@@ -33,7 +33,7 @@ func (a *Algorithm) PrintBitMatrix() {
 	for row := 0; row < len(a.bitMatrix); row++ {
 		fmt.Printf("Row %d (0b%08b): ", row, a.bitMatrix[row])
 		for col := 0; col < 8; col++ {
-			bit := (a.bitMatrix[row] >> col) & 1
+			bit := (a.bitMatrix[row] >> (7 - col)) & 1 //  start from MSB
 			fmt.Printf("%d ", bit)
 		}
 		fmt.Println()

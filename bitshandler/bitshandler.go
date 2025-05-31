@@ -18,27 +18,51 @@ func NewBitHandler(byteMatrix []byte) *BitsHandler {
 	return bh
 }
 
-func (bh *BitsHandler) findSetBitPositions(b byte) []int {
-	positions := make([]int, 0, bits.OnesCount8(b))
-	for b != 0 {
-		pos := bits.TrailingZeros8(b)
-		positions = append(positions, pos)
-		b &= b - 1
+// / findSetBitPositions returns the bit‐offsets of all 1s in a single row byte.
+// Uses left-to-right indexing (MSB=0 to LSB=7) and returns in left-to-right order
+func (bh *BitsHandler) findSetBitPositions(rowByte byte) []int {
+	// Preallocate for the number of 1‐bits in this byte
+	positions := make([]int, 0, bits.OnesCount8(rowByte))
+
+	for rowByte != 0 {
+		// Find rightmost set bit using TrailingZeros8
+		rightToLeftPos := bits.TrailingZeros8(rowByte)
+
+		// Convert to left-to-right indexing (MSB=0 to LSB=7)
+		leftToRightPos := 7 - rightToLeftPos
+
+		positions = append(positions, leftToRightPos)
+
+		// Clear the lowest set bit
+		rowByte &= rowByte - 1
 	}
+
+	// Reverse the slice to get left-to-right order
+	for i, j := 0, len(positions)-1; i < j; i, j = i+1, j-1 {
+		positions[i], positions[j] = positions[j], positions[i]
+	}
+
 	return positions
 }
 
+// findAllSetBits walks the entire byte‐matrix, finds every bit set to 1,
+// and turns each into a board.Square(rowIndex, colIndex).
 func (bh *BitsHandler) findAllSetBits() []board.Square {
-	var res []board.Square
-	for r, row := range bh.matrix {
-		for _, c := range bh.findSetBitPositions(row) {
-			res = append(res, board.NewSquare("", 0, r, c))
+	var squares []board.Square
+
+	for rowIndex, rowByte := range bh.matrix {
+		// find all column‐indices with a 1‐bit (using left-to-right indexing)
+		setCols := bh.findSetBitPositions(rowByte)
+
+		for _, colIndex := range setCols {
+			// create a Square at (rowIndex, colIndex)
+			squares = append(squares, board.NewSquare("", 0, rowIndex, colIndex))
 		}
 	}
-	return res
+
+	return squares
 }
 
-// PeekNextSetBitPosition returns the next set-bit WITHOUT advancing currentIndex
 func (bh *BitsHandler) PeekNextSetBitPosition() (board.Square, bool) {
 	if bh.currentIndex >= len(bh.allPositions) {
 		return board.Square{}, false
@@ -46,14 +70,13 @@ func (bh *BitsHandler) PeekNextSetBitPosition() (board.Square, bool) {
 	return bh.allPositions[bh.currentIndex], true
 }
 
-// FindNextSetBitPosition returns the next set-bit AND advances currentIndex
 func (bh *BitsHandler) FindNextSetBitPosition() (board.Square, bool) {
 	if bh.currentIndex >= len(bh.allPositions) {
 		return board.Square{}, false
 	}
-	pos := bh.allPositions[bh.currentIndex]
+	sq := bh.allPositions[bh.currentIndex]
 	bh.currentIndex++
-	return pos, true
+	return sq, true
 }
 
 func (bh *BitsHandler) HasMoreBits() bool {
@@ -66,7 +89,7 @@ func (bh *BitsHandler) AllSetBits() []board.Square {
 
 func (bh *BitsHandler) PrintPositions() {
 	for _, pos := range bh.allPositions {
-		fmt.Printf("1 at row %d, col %d\n", pos.Row(), pos.Column())
+		fmt.Printf("(r: %d, col: %d)\n", pos.Row(), pos.Column())
 	}
 }
 
