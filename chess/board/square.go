@@ -3,31 +3,30 @@ package board
 type Square struct {
 	name        string
 	binaryValue int
-	position    Position
+	row         int
+	column      int
 }
 
-func NewSquare(name string, binaryValue int, position Position) Square {
+func NewSquare(name string, binaryValue, row, column int) Square {
 	return Square{
 		name:        name,
 		binaryValue: binaryValue,
-		position:    position,
+		row:         row,
+		column:      column,
 	}
 }
 
-func NewSquareZero(square Square) Square {
+func NewSquareZero(s Square) Square {
 	return Square{
-		name:        square.name,
+		name:        s.name,
 		binaryValue: 0,
-		position:    Position{square.position.row, square.position.column},
+		row:         s.row,
+		column:      s.column,
 	}
 }
 
 func (s *Square) Name() string {
 	return s.name
-}
-
-func (s *Square) Position() Position {
-	return s.position
 }
 
 func (s *Square) SetName(name string) {
@@ -38,6 +37,14 @@ func (s *Square) BinaryValue() int {
 	return s.binaryValue
 }
 
-func GetSquareName(position Position, board WhiteBoardMatrix) string {
-	return board[position.Row()][position.Column()]
+func (s *Square) SetBinaryValue(val int) {
+	s.binaryValue = val
+}
+
+func (s *Square) Row() int {
+	return s.row
+}
+
+func (s *Square) Column() int {
+	return s.column
 }

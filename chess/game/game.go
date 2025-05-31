@@ -1,64 +1,54 @@
 package game
 
 import (
+	"fmt"
+
 	bithandler "chessencryption/bitshandler"
 	"chessencryption/chess/algorithm"
 	. "chessencryption/chess/board"
-	"fmt"
 )
 
 func Run() {
-	// Matrix represented as bytes for efficient bit operations
-	// TODO: produce more matrices like this with test cases for edge cases and different values
-	matrixRows := []byte{
-		0b01011010, // row 0: bits at positions 1,3,4,6
-		0b10100101, // row 1: bits at positions 0,2,5,7
-		0b00110110, // row 2: bits at positions 1,2,5,6
-		0b11001001, // row 3: bits at positions 0,3,6,7
-		0b01101100, // row 4: bits at positions 2,3,5,6
-		0b10010011, // row 5: bits at positions 0,1,4,7
+	matrix := []byte{
+		0b01011010,
+		0b10100101,
+		0b00110110,
+		0b11001001,
+		0b01101100,
+		0b10010111,
 	}
 
-	var bitHandler *bithandler.BitsHandler = bithandler.NewBitHandler(matrixRows)
+	bh := bithandler.NewBitHandler(matrix)
+	mv := NewMoveValidator()
+	algo := algorithm.NewAlgorithm(matrix, bh, mv)
+	white := NewWhiteBoard()
+	black := NewBlackBoard()
 
-	var moveValidator *MoveValidator = NewMoveValidator()
-
-	var algo algorithm.Algorithm = algorithm.NewAlgorithm(matrixRows, bitHandler, moveValidator)
-
-	var blackBoard BlackChessBoard = NewBlackBoard()
-	var whiteBoard WhiteChessBoard = NewWhiteBoard()
-
-	fmt.Println(" expected matrix (as bytes):")
+	fmt.Println("Bit matrix representation:")
 	algo.PrintBitMatrix()
-
-	fmt.Println("\nSet bit positions found by BitHandler:")
-	bitHandler.PrintPositions()
 	fmt.Println()
 
-	var isGameFinished bool = false
-	var isNextWhiteMoveOneStep bool = false
-	var nextWhiteMove Square
-	var nextBlackMove Square
-
-	for !isGameFinished {
-		nextWhiteMove, isGameFinished = algo.DetermineNextWhiteMove(&whiteBoard)
-
-		if !isGameFinished {
-			fmt.Printf("Next white move: %s at position (%d, %d)\n",
-				nextWhiteMove.Name(),
-				nextWhiteMove.Position().Row(),
-				nextWhiteMove.Position().Column())
-
-			isNextWhiteMoveOneStep = moveValidator.IsNextMoveValidMove(algo.CurrentSquare(), nextWhiteMove)
-
-			nextBlackMove = algo.DetermineNextBlackMove(isNextWhiteMoveOneStep, &whiteBoard)
-
-			whiteBoard.AddMove(&nextWhiteMove)
-			blackBoard.AddMove(&nextBlackMove)
-
-			algo.SetCurrentSquare(&nextWhiteMove)
+	for {
+		wMove, ok := algo.DetermineNextWhiteMove(&white)
+		if !ok {
+			fmt.Println("Game finished! All set bits have been processed.")
+			return
 		}
-	}
+		white.AddMove(wMove)
+		fmt.Printf(
+			"White queen moved to %s (%d,%d) — value=%d\n",
+			wMove.Name(), wMove.Row(), wMove.Column(), wMove.BinaryValue(),
+		)
 
-	fmt.Println("Game finished! All set bits have been processed.")
+		// Black’s mirror move
+		isAssist := wMove.BinaryValue() == 0
+		bMove := algo.DetermineNextBlackMove(isAssist, &white)
+		black.AddMove(bMove)
+		fmt.Printf(
+			"Black queen moved to %s (%d,%d)\n\n",
+			bMove.Name(), bMove.Row(), bMove.Column(),
+		)
+
+		algo.SetCurrentSquare(&wMove)
+	}
 }

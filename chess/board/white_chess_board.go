@@ -14,8 +14,8 @@ func NewWhiteBoard() WhiteChessBoard {
 	}
 }
 
-func (cb *WhiteChessBoard) AddMove(nextMove *Square) {
-	cb.queenMoves = append(cb.queenMoves, *nextMove)
+func (cb *WhiteChessBoard) AddMove(nextMove Square) {
+	cb.queenMoves = append(cb.queenMoves, nextMove)
 }
 
 func (cb *WhiteChessBoard) GetQueenPosition() Square {
@@ -26,6 +26,6 @@ func (cb *WhiteChessBoard) Board() WhiteBoardMatrix {
 	return cb.board
 }
 
-func (cb *WhiteChessBoard) GetSquareName(position Position) string {
-	return cb.Board()[position.row][position.column]
+func (cb *WhiteChessBoard) GetSquareName(square Square) string {
+	return cb.Board()[square.row][square.column]
 }

@@ -9,17 +9,12 @@ import (
 type BitsHandler struct {
 	matrix       []byte
 	currentIndex int
-	allPositions []board.Position
+	allPositions []board.Square
 }
 
 func NewBitHandler(byteMatrix []byte) *BitsHandler {
-	bh := &BitsHandler{
-		matrix:       byteMatrix,
-		currentIndex: 0,
-	}
-
+	bh := &BitsHandler{matrix: byteMatrix}
 	bh.allPositions = bh.findAllSetBits()
-
 	return bh
 }
 
@@ -33,32 +28,39 @@ func (bh *BitsHandler) findSetBitPositions(b byte) []int {
 	return positions
 }
 
-func (bh *BitsHandler) findAllSetBits() []board.Position {
-	var results []board.Position
-	for rowIndex, rowByte := range bh.matrix {
-		setCols := bh.findSetBitPositions(rowByte)
-		for _, colIndex := range setCols {
-			results = append(results, board.NewPosition(rowIndex, colIndex))
+func (bh *BitsHandler) findAllSetBits() []board.Square {
+	var res []board.Square
+	for r, row := range bh.matrix {
+		for _, c := range bh.findSetBitPositions(row) {
+			res = append(res, board.NewSquare("", 0, r, c))
 		}
 	}
-	return results
+	return res
 }
 
-func (bh *BitsHandler) FindNextSetBitPosition() (board.Position, bool) {
+// PeekNextSetBitPosition returns the next set-bit WITHOUT advancing currentIndex
+func (bh *BitsHandler) PeekNextSetBitPosition() (board.Square, bool) {
 	if bh.currentIndex >= len(bh.allPositions) {
-		return board.Position{}, false // No more set bits
+		return board.Square{}, false
 	}
+	return bh.allPositions[bh.currentIndex], true
+}
 
-	position := bh.allPositions[bh.currentIndex]
+// FindNextSetBitPosition returns the next set-bit AND advances currentIndex
+func (bh *BitsHandler) FindNextSetBitPosition() (board.Square, bool) {
+	if bh.currentIndex >= len(bh.allPositions) {
+		return board.Square{}, false
+	}
+	pos := bh.allPositions[bh.currentIndex]
 	bh.currentIndex++
-	return position, true
+	return pos, true
 }
 
 func (bh *BitsHandler) HasMoreBits() bool {
 	return bh.currentIndex < len(bh.allPositions)
 }
 
-func (bh *BitsHandler) AllSetBits() []board.Position {
+func (bh *BitsHandler) AllSetBits() []board.Square {
 	return bh.allPositions
 }
 

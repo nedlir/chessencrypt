@@ -17,10 +17,7 @@ func NewMoveValidator() *MoveValidator {
 	if err != nil {
 		panic("failed to initialize valid moves: " + err.Error())
 	}
-
-	return &MoveValidator{
-		possibleQueenMoves: possibleQueenMoves,
-	}
+	return &MoveValidator{possibleQueenMoves: possibleQueenMoves}
 }
 
 func (mv *MoveValidator) IsNextMoveValidMove(currentSquare, nextMove Square) bool {
@@ -28,30 +25,25 @@ func (mv *MoveValidator) IsNextMoveValidMove(currentSquare, nextMove Square) boo
 	if !exists {
 		return false
 	}
-
 	return validDestinations[nextMove]
 }
 
-func squareNameToPosition(squareName string) Position {
-	if len(squareName) != 2 {
-		return NewPosition(0, 0)
+func squareNameToRowCol(name string) (int, int) {
+	if len(name) != 2 {
+		return 0, 0
 	}
-
-	col := int(squareName[0] - 'a')
-
-	row := 8 - int(squareName[1]-'0')
-
-	return NewPosition(row, col)
+	col := int(name[0] - 'a')
+	row := 8 - int(name[1]-'0')
+	return row, col
 }
 
-func newSquareFromName(squareName string) Square {
-	position := squareNameToPosition(squareName)
-	return NewSquare(squareName, 0, position)
+func newSquareFromName(name string) Square {
+	row, col := squareNameToRowCol(name)
+	return NewSquare(name, 0, row, col)
 }
 
 func initQueenValidMoves(filepath string) (queenValidMovesMap, error) {
 	parser := parsers.NewJSONParser()
-
 	data, err := parser.LoadToMapFromFile(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load valid moves: %w", err)
@@ -61,11 +53,9 @@ func initQueenValidMoves(filepath string) (queenValidMovesMap, error) {
 	for key, valueMap := range data {
 		sq := newSquareFromName(key)
 		vm[sq] = make(queenValidDestinationsPerSquare)
-
-		for value := range valueMap {
-			vm[sq][newSquareFromName(value)] = true
+		for destName := range valueMap {
+			vm[sq][newSquareFromName(destName)] = true
 		}
 	}
-
 	return vm, nil
 }
