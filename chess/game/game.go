@@ -13,14 +13,15 @@ func Run() {
 		0b01011010,
 		0b10100101,
 		0b00110110,
-		0b11001001,
-		0b01101100,
-		0b10010111,
+		// 0b11001001,
+		// 0b01101100,
+		// 0b10010111,
 	}
 
 	bh := bithandler.NewBitHandler(matrix)
-	mv := NewMoveValidator()
+	mv := NewMovesValidator()
 	algo := algorithm.NewAlgorithm(matrix, bh, mv)
+
 	white := NewWhiteBoard()
 	black := NewBlackBoard()
 
@@ -29,11 +30,12 @@ func Run() {
 	fmt.Println()
 
 	for {
-		wMove, ok := algo.DetermineNextWhiteMove(&white)
-		if !ok {
+		wMove, isNextMove := algo.DetermineNextWhiteMove(&white)
+		if !isNextMove {
 			fmt.Println("Game finished! All set bits have been processed.")
 			return
 		}
+
 		white.AddMove(wMove)
 		fmt.Printf(
 			"White queen moved to %s (%d,%d) — value=%d\n",

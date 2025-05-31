@@ -8,29 +8,28 @@ import (
 )
 
 type Algorithm struct {
-	bitMatrix     []byte
-	currentSquare Square
-	moveValidator *MoveValidator
-	bitHandler    *bithandler.BitsHandler
+	bitMatrix      []byte
+	currentSquare  Square
+	movesValidator *MovesValidator
+	bitHandler     *bithandler.BitsHandler
 }
 
 func NewAlgorithm(
 	matrix []byte,
 	bh *bithandler.BitsHandler,
-	mv *MoveValidator,
+	moves *MovesValidator,
 ) Algorithm {
 	// start at a6 → (row=0, col=0)
 	start := NewSquare("a6", 0, 0, 0)
 	return Algorithm{
-		bitMatrix:     matrix,
-		bitHandler:    bh,
-		moveValidator: mv,
-		currentSquare: start,
+		bitMatrix:      matrix,
+		bitHandler:     bh,
+		movesValidator: moves,
+		currentSquare:  start,
 	}
 }
 
 func (a *Algorithm) PrintBitMatrix() {
-	fmt.Println("Bit matrix representation:")
 	for row := 0; row < len(a.bitMatrix); row++ {
 		fmt.Printf("Row %d (0b%08b): ", row, a.bitMatrix[row])
 		for col := 0; col < 8; col++ {
@@ -41,35 +40,30 @@ func (a *Algorithm) PrintBitMatrix() {
 	}
 }
 
-// DetermineNextWhiteMove:
-//   - Peek next set‐bit
-//   - If directly reachable, consume it & return value=1
-//   - Else step one row down (row+1) with value=0
 func (a *Algorithm) DetermineNextWhiteMove(cb *WhiteChessBoard) (Square, bool) {
-	// 1) Peek the next 1‐bit, but do NOT advance the pointer yet:
-	targetPos, ok := a.bitHandler.PeekNextSetBitPosition()
-	if !ok {
-		return Square{}, false
+	targetPosition, hasNextTarget := a.bitHandler.PeekNextSetBitPosition()
+	if !hasNextTarget {
+		return Square{}, false //game is finished, found all necessary bits
 	}
 
-	curr := a.currentSquare
-	dr := targetPos.Row() - curr.Row()
-	dc := targetPos.Column() - curr.Column()
+	currentPosition := a.currentSquare
+	rowDifference := targetPosition.Row() - currentPosition.Row()
+	columnDifference := targetPosition.Column() - currentPosition.Column()
 
 	// 2) If it lies on the same rank/file/diagonal → consume & jump (value=1)
-	if dr == 0 || dc == 0 || abs(dr) == abs(dc) {
+	if rowDifference == 0 || columnDifference == 0 || abs(rowDifference) == abs(columnDifference) {
 		_, _ = a.bitHandler.FindNextSetBitPosition()
-		name := cb.Board()[targetPos.Row()][targetPos.Column()]
-		return NewSquare(name, 1, targetPos.Row(), targetPos.Column()), true
+		squareName := cb.Board()[targetPosition.Row()][targetPosition.Column()]
+		return NewSquare(squareName, 1, targetPosition.Row(), targetPosition.Column()), true
 	}
 
 	// 3) Otherwise: one‐step assistance → exactly one row down (value=0)
-	nextRow := curr.Row() + 1
-	if nextRow >= WhiteBoardRowsLength {
-		nextRow = WhiteBoardRowsLength - 1
+	assistanceRow := currentPosition.Row() + 1
+	if assistanceRow >= WhiteBoardRowsLength {
+		assistanceRow = WhiteBoardRowsLength - 1
 	}
-	name := cb.Board()[nextRow][curr.Column()]
-	return NewSquare(name, 0, nextRow, curr.Column()), true
+	squareName := cb.Board()[assistanceRow][currentPosition.Column()]
+	return NewSquare(squareName, 0, assistanceRow, currentPosition.Column()), true
 }
 
 func abs(x int) int {

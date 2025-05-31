@@ -1,4 +1,4 @@
-package bithandler
+package bitshandler
 
 import (
 	"chessencryption/chess/board"
