@@ -12,10 +12,8 @@ type BitsHandler struct {
 	allPositions []board.Square
 }
 
-func NewBitHandler(byteMatrix []byte) *BitsHandler {
-	bh := &BitsHandler{matrix: byteMatrix}
-	bh.allPositions = bh.findAllSetBits()
-	return bh
+func NewBitHandler() BitsHandler {
+	return BitsHandler{}
 }
 
 func (bh *BitsHandler) UpdateMatrix(newMatrix []byte) {
@@ -53,7 +51,6 @@ func (bh *BitsHandler) addSquare(squares []board.Square, rowIndex int, currentBy
 	squareName := board.WhiteQueenLayout[rowIndex][nextSetBitPosition]
 	return append(squares, board.NewSquare(squareName, 1, rowIndex, nextSetBitPosition))
 }
-
 func removeRightmostSetBit(currentByte byte) byte {
 	return currentByte & (currentByte - 1)
 }
@@ -74,4 +71,8 @@ func (bh *BitsHandler) Reset() {
 
 func (bh *BitsHandler) CurrentIndex() int {
 	return bh.currentIndex
+}
+
+func (bh *BitsHandler) IsFirstBitZero() bool {
+	return (bh.matrix[0]>>7)&1 == 0
 }

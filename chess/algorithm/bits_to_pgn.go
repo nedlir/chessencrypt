@@ -1,31 +1,21 @@
 package algorithm
 
 import (
+	"chessencryption/chess/board"
 	"fmt"
-
-	bithandler "chessencryption/bitshandler"
-	. "chessencryption/chess/board"
 )
 
 type Algorithm struct {
 	bitMatrix      []byte
-	currentSquare  Square
-	movesValidator *MovesValidator
-	bitHandler     *bithandler.BitsHandler
+	movesValidator *board.MovesValidator
 }
 
 func NewAlgorithm(
 	matrix []byte,
-	bh *bithandler.BitsHandler,
-	moves *MovesValidator,
 ) Algorithm {
-	// start at a6 → (row=0, col=0)
-	start := NewSquare("a6", 0, 0, 0)
 	return Algorithm{
 		bitMatrix:      matrix,
-		bitHandler:     bh,
-		movesValidator: moves,
-		currentSquare:  start,
+		movesValidator: board.NewMovesValidator(),
 	}
 }
 
@@ -40,80 +30,47 @@ func (a *Algorithm) PrintBitMatrix() {
 	}
 }
 
-func (a *Algorithm) DetermineNextWhiteMove(cb *WhiteChessBoard) (Square, bool) {
-	targetPosition, hasNextTarget := a.bitHandler.PeekNextSetBitPosition()
-	if !hasNextTarget {
-		return Square{}, false //game is finished, found all necessary bits
+func (a *Algorithm) DetermineNextWhiteMove(currentSquare board.Square, nextTargetSquareWithOne board.Square) (board.Square, bool) {
+	if a.movesValidator.IsNextMoveValidMove(currentSquare, nextTargetSquareWithOne) {
+		return nextTargetSquareWithOne, false
 	}
 
-	currentPosition := a.currentSquare
-	rowDifference := targetPosition.Row() - currentPosition.Row()
-	columnDifference := targetPosition.Column() - currentPosition.Column()
+	fmt.Println("traversalDownSquare:")
+	traversalDownSquare := getTraversalDownSquare(currentSquare, nextTargetSquareWithOne)
 
-	// 2) If it lies on the same rank/file/diagonal → consume & jump (value=1)
-	if rowDifference == 0 || columnDifference == 0 || abs(rowDifference) == abs(columnDifference) {
-		_, _ = a.bitHandler.FindNextSetBitPosition()
-		squareName := cb.Board()[targetPosition.Row()][targetPosition.Column()]
-		return NewSquare(squareName, 1, targetPosition.Row(), targetPosition.Column()), true
-	}
+	return traversalDownSquare, true
 
-	// 3) Otherwise: one‐step assistance → exactly one row down (value=0)
-	assistanceRow := currentPosition.Row() + 1
-	if assistanceRow >= WhiteBoardRowsLength {
-		assistanceRow = WhiteBoardRowsLength - 1
-	}
-	squareName := cb.Board()[assistanceRow][currentPosition.Column()]
-	return NewSquare(squareName, 0, assistanceRow, currentPosition.Column()), true
 }
 
-func abs(x int) int {
-	if x < 0 {
-		return -x
-	}
-	return x
+func getTraversalDownSquare(currentSquare board.Square, nextSquare board.Square) board.Square {
+	row := nextSquare.Row() - currentSquare.Row()
+	col := currentSquare.Column()
+	binaryValue := 0
+	name := board.WhiteQueenLayout[row][col]
+
+	return board.NewSquare(name, binaryValue, row, col)
 }
 
-func (a *Algorithm) CurrentSquare() Square {
-	return a.currentSquare
-}
-
-func (a *Algorithm) SetCurrentSquare(sq *Square) {
-	a.currentSquare = *sq
-}
-
-// DetermineNextBlackMove unchanged in its decision tree—only Position is removed.
-func (a *Algorithm) DetermineNextBlackMove(isAssist bool, cb *WhiteChessBoard) Square {
-	// map each queen‐square name to its row/col
-	squarePositions := map[string]Square{
-		"Qe8": NewSquare("Qe8", 0, 0, 4),
-		"Qf8": NewSquare("Qf8", 0, 0, 5),
-		"Qg8": NewSquare("Qg8", 0, 0, 6),
-		"Qh8": NewSquare("Qh8", 0, 0, 7),
+func (a *Algorithm) DetermineNextBlackMove(isAssist bool, currentSquare board.Square) board.Square {
+	if isAssist {
+		switch currentSquare.Name() {
+		case "e8", "f8":
+			return board.NewSquare("h8", 0, 0, 7)
+		case "g8", "h8":
+			return board.NewSquare("e8", 0, 0, 4)
+		}
+	} else {
+		switch currentSquare.Name() {
+		case "e8":
+			return board.NewSquare("f8", 0, 0, 5)
+		case "f8":
+			return board.NewSquare("g8", 0, 0, 6)
+		case "g8":
+			return board.NewSquare("h8", 0, 0, 7)
+		case "h8":
+			return board.NewSquare("g8", 0, 0, 6)
+		}
 	}
 
-	var target Square
-	switch {
-	case isAssist && (a.currentSquare.Name() == "Qe8" || a.currentSquare.Name() == "Qf8"):
-		target = squarePositions["Qh8"]
-	case isAssist && (a.currentSquare.Name() == "Qg8" || a.currentSquare.Name() == "Qh8"):
-		target = squarePositions["Qe8"]
-	case !isAssist && a.currentSquare.Name() == "Qe8":
-		target = squarePositions["Qf8"]
-	case !isAssist && a.currentSquare.Name() == "Qf8":
-		target = squarePositions["Qg8"]
-	case !isAssist && a.currentSquare.Name() == "Qg8":
-		target = squarePositions["Qh8"]
-	case !isAssist && a.currentSquare.Name() == "Qh8":
-		target = squarePositions["Qg8"]
-	}
-
-	// lookup board name and assign binary value
-	r, c := target.Row(), target.Column()
-	boardName := cb.Board()[r][c]
-	val := 0
-	if !isAssist {
-		val = 1
-	}
-
-	return NewSquare(boardName, val, r, c)
+	return board.Square{}
 }
