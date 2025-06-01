@@ -1,7 +1,7 @@
 package board
 
 import (
-	"chessencryption/parsers/json"
+	"chessencryption/utils/parsers/json"
 	"fmt"
 )
 
@@ -12,7 +12,7 @@ type MovesValidator struct {
 }
 
 func NewMovesValidator() *MovesValidator {
-	possibleQueenMoves, err := initQueenValidMoves("chess/data/queen_valid_moves.json")
+	possibleQueenMoves, err := initQueenValidMoves("assets/data/queen_valid_moves.json")
 	if err != nil {
 		panic("failed to initialize valid moves: " + err.Error())
 	}

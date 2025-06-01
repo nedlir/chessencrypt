@@ -1,4 +1,4 @@
-package fen
+package board
 
 // FEN string for initial encoding based on whether a6's bit is 0 or 1
 const (

@@ -1,7 +1,7 @@
 package json
 
 import (
-	"chessencryption/files"
+	"chessencryption/utils/files"
 	"encoding/json"
 	"fmt"
 )

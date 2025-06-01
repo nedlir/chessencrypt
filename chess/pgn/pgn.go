@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"chessencryption/algorithm"
 	"chessencryption/bitshandler"
-	"chessencryption/chess/algorithm"
 	"chessencryption/chess/board"
-	"chessencryption/chess/fen"
 )
 
 const WHITE_QUEEN_MOVE_ZERO = ".."
@@ -40,9 +39,9 @@ func Run(matrix []byte) {
 	fmt.Printf("Found bits positions: %v", squaresToMark)
 
 	if bitsHandler.IsFirstBitZero() {
-		pgnBoard.WriteString(fmt.Sprintf(`[FEN "%v"]`+"\n", fen.FENZero))
+		pgnBoard.WriteString(fmt.Sprintf(`[FEN "%v"]`+"\n", board.FENZero))
 	} else {
-		pgnBoard.WriteString(fmt.Sprintf(`[FEN "%v"]`+"\n", fen.FENOne))
+		pgnBoard.WriteString(fmt.Sprintf(`[FEN "%v"]`+"\n", board.FENOne))
 	}
 
 	pgnBoard.WriteString(fmt.Sprintf("1.%s ", WHITE_QUEEN_MOVE_ZERO)) // "1..."
