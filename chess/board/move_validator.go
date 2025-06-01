@@ -5,8 +5,7 @@ import (
 	"fmt"
 )
 
-type queenValidDestinationsPerSquare map[Square]bool
-type queenValidMovesMap map[Square]queenValidDestinationsPerSquare
+type queenValidMovesMap map[string][]string
 
 type MovesValidator struct {
 	possibleQueenMoves queenValidMovesMap
@@ -20,12 +19,26 @@ func NewMovesValidator() *MovesValidator {
 	return &MovesValidator{possibleQueenMoves: possibleQueenMoves}
 }
 
-func (mv *MovesValidator) IsNextMoveValidMove(currentSquare, nextMove Square) bool {
-	validDestinations, exists := mv.possibleQueenMoves[currentSquare]
+func (mv *MovesValidator) IsNextMoveValidMove(currentSquare Square, nextMove Square) bool {
+	fmt.Println("\nIsNextMoveValidMove:")
+	fmt.Printf("current Square: %v\n next Square: %v \n", currentSquare, nextMove)
+
+	currentSquareName := currentSquare.Name()
+	nextMoveName := nextMove.Name()
+
+	validDestinations, exists := mv.possibleQueenMoves[currentSquareName]
 	if !exists {
+		fmt.Printf("No moves found for square: %s\n", currentSquareName)
 		return false
 	}
-	return validDestinations[nextMove]
+
+	for _, validMove := range validDestinations {
+		if validMove == nextMoveName {
+			return true
+		}
+	}
+
+	return false
 }
 
 func initQueenValidMoves(filepath string) (queenValidMovesMap, error) {
@@ -35,26 +48,15 @@ func initQueenValidMoves(filepath string) (queenValidMovesMap, error) {
 	}
 
 	vm := make(queenValidMovesMap)
-	for key, valueMap := range data {
-		sq := newSquareFromName(key)
-		vm[sq] = make(queenValidDestinationsPerSquare)
+	for squareName, valueMap := range data {
+		var destinations []string
+
 		for destName := range valueMap {
-			vm[sq][newSquareFromName(destName)] = true
+			destinations = append(destinations, destName)
 		}
+
+		vm[squareName] = destinations
 	}
+
 	return vm, nil
-}
-
-func squareNameToRowCol(name string) (int, int) {
-	if len(name) != 2 {
-		return 0, 0
-	}
-	col := int(name[0] - 'a')
-	row := 8 - int(name[1]-'0')
-	return row, col
-}
-
-func newSquareFromName(name string) Square {
-	row, col := squareNameToRowCol(name)
-	return NewSquare(name, 0, row, col)
 }
