@@ -1,7 +1,7 @@
 package algorithm
 
 import (
-	"chessencryption/chess/board"
+	"github.com/nedlir/chessencrypt/chess/board"
 )
 
 type Algorithm struct {

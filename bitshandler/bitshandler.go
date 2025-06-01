@@ -1,9 +1,10 @@
 package bitshandler
 
 import (
-	"chessencryption/chess/board"
 	"math/bits"
 	"slices"
+
+	"github.com/nedlir/chessencrypt/chess/board"
 )
 
 type BitsHandler struct {

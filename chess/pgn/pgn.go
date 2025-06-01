@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"chessencryption/algorithm"
-	"chessencryption/bitshandler"
-	"chessencryption/chess/board"
+	"github.com/nedlir/chessencrypt/algorithm"
+	"github.com/nedlir/chessencrypt/bitshandler"
+	"github.com/nedlir/chessencrypt/chess/board"
 )
 
 const WHITE_QUEEN_MOVE_ZERO = ".."

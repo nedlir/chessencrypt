@@ -1,6 +1,6 @@
 package main
 
-import "chessencryption/chess/pgn"
+import "github.com/nedlir/chessencrypt/chess/pgn"
 
 // import "chessencryption/chess/game"
 

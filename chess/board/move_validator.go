@@ -1,8 +1,9 @@
 package board
 
 import (
-	"chessencryption/utils/parsers/json"
 	"fmt"
+
+	"github.com/nedlir/chessencrypt/utils/parsers/json"
 )
 
 type queenValidMovesMap map[string][]string

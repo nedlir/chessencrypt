@@ -1,9 +1,10 @@
 package json
 
 import (
-	"chessencryption/utils/files"
 	"encoding/json"
 	"fmt"
+
+	"github.com/nedlir/chessencrypt/utils/files"
 )
 
 type StringSet map[string]bool
