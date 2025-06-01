@@ -20,9 +20,6 @@ func NewMovesValidator() *MovesValidator {
 }
 
 func (mv *MovesValidator) IsNextMoveValidMove(currentSquare Square, nextMove Square) bool {
-	fmt.Println("\nIsNextMoveValidMove:")
-	fmt.Printf("current Square: %v\n next Square: %v \n", currentSquare, nextMove)
-
 	currentSquareName := currentSquare.Name()
 	nextMoveName := nextMove.Name()
 

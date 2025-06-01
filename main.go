@@ -1,17 +1,23 @@
 package main
 
-import (
-	"chessencryption/chess/game"
-)
+import "chessencryption/chess/pgn"
 
 // import "chessencryption/chess/game"
 
 func main() {
 
-	game.Run()
+	matrix := []byte{
+		0b01011010,
+		// 0b10100101,
+		// 0b10110110,
+		// 0b00000001,
+		0b00000000,
+		0b00000000,
+		0b00000000,
+		0b00101100,
+		0b01101100,
+	}
 
-	// myByte := byte(0b00110110)
-	// result := firstSetBitFromLeft(myByte)
+	pgn.Run(matrix)
 
-	// fmt.Printf("Byte is: %08b, first appearance of One from left at index: %d", myByte, result)
 }

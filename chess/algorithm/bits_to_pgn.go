@@ -2,7 +2,6 @@ package algorithm
 
 import (
 	"chessencryption/chess/board"
-	"fmt"
 )
 
 type Algorithm struct {
@@ -19,31 +18,19 @@ func NewAlgorithm(
 	}
 }
 
-func (a *Algorithm) PrintBitMatrix() {
-	for row := 0; row < len(a.bitMatrix); row++ {
-		fmt.Printf("Row %d (0b%08b): ", row, a.bitMatrix[row])
-		for col := 0; col < 8; col++ {
-			bit := (a.bitMatrix[row] >> (7 - col)) & 1 //  start from MSB
-			fmt.Printf("%d ", bit)
-		}
-		fmt.Println()
-	}
-}
-
-func (a *Algorithm) DetermineNextWhiteMove(currentSquare board.Square, nextTargetSquareWithOne board.Square) (board.Square, bool) {
-	if a.movesValidator.IsNextMoveValidMove(currentSquare, nextTargetSquareWithOne) {
-		return nextTargetSquareWithOne, false
+func (a *Algorithm) DetermineNextWhiteMove(currentSquare board.Square, nextSquareWithOne board.Square) (board.Square, bool) {
+	if a.movesValidator.IsNextMoveValidMove(currentSquare, nextSquareWithOne) {
+		return nextSquareWithOne, false
 	}
 
-	fmt.Println("traversalDownSquare:")
-	traversalDownSquare := getTraversalDownSquare(currentSquare, nextTargetSquareWithOne)
+	traversalDownSquare := getTraversalDownSquare(currentSquare, nextSquareWithOne)
 
 	return traversalDownSquare, true
 
 }
 
-func getTraversalDownSquare(currentSquare board.Square, nextSquare board.Square) board.Square {
-	row := nextSquare.Row() - currentSquare.Row()
+func getTraversalDownSquare(currentSquare board.Square, nextSquareWithOne board.Square) board.Square {
+	row := nextSquareWithOne.Row()
 	col := currentSquare.Column()
 	binaryValue := 0
 	name := board.WhiteQueenLayout[row][col]

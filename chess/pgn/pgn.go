@@ -1,4 +1,4 @@
-package game
+package pgn
 
 import (
 	"fmt"
@@ -15,15 +15,7 @@ const FIRST_WHITE_SQUARE = "a6"
 const FIRST_BLACK_SQUARE = "f8"
 const END_OF_GAME_DRAW = "1/2-1/2"
 
-func Run() {
-	matrix := []byte{
-		0b01011010,
-		0b10100101,
-		// 0b10110110,
-		// 0b00000001,
-		// 0b11001001,
-		// 0b01101100,
-	}
+func Run(matrix []byte) {
 
 	bitsHandler := bitshandler.NewBitHandler()
 	algo := algorithm.NewAlgorithm(matrix)
@@ -62,7 +54,7 @@ func Run() {
 	isAssist := false
 
 	squareIndex := 0
-	pgnMoveIndex := 1
+	pgnMoveIndex := 2
 
 	for squareIndex < len(squaresToMark) {
 		nextWhiteSquare, isAssist = algo.DetermineNextWhiteMove(currentWhiteSquare, squaresToMark[squareIndex])
@@ -71,8 +63,6 @@ func Run() {
 		if !isAssist {
 			squareIndex++
 		}
-
-		fmt.Printf("nextWhiteSquare: %v, isAssist: %v \n", nextWhiteSquare, isAssist)
 
 		currentBlackSquare = algo.DetermineNextBlackMove(isAssist, currentBlackSquare)
 
