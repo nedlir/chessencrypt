@@ -6,11 +6,21 @@ type Square struct {
 	column int
 }
 
-func NewSquare(name string, row, column int) Square {
+func NewSquare(squareName string) Square {
+	square, exists := BlackSquarePositions[squareName]
+	if exists {
+		return Square{
+			name:   squareName,
+			row:    square.Row,
+			column: square.Col,
+		}
+	} else {
+		square = WhiteSquarePositions[squareName]
+	}
 	return Square{
-		name:   name,
-		row:    row,
-		column: column,
+		name:   squareName,
+		row:    square.Row,
+		column: square.Col,
 	}
 }
 

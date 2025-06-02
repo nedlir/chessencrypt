@@ -65,8 +65,8 @@ func (p *PGNEncoder) writePGNHeaders(pgnBoard *strings.Builder, chunkNumber int)
 func (p *PGNEncoder) writeMoves(pgnBoard *strings.Builder) {
 	squaresToMark := p.bitsHandler.AllSetBits()
 
-	currentWhiteSquare := board.NewSquare(FIRST_WHITE_SQUARE, 0, 0)
-	currentBlackSquare := board.NewSquare(FIRST_BLACK_SQUARE, 0, 5)
+	currentWhiteSquare := board.NewSquare(FIRST_WHITE_SQUARE)
+	currentBlackSquare := board.NewSquare(FIRST_BLACK_SQUARE)
 
 	squareIndex := 0
 	if squaresToMark[squareIndex].Name() == FIRST_WHITE_SQUARE {
