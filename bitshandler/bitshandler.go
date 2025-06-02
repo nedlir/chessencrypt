@@ -50,7 +50,7 @@ func (bh *BitsHandler) findAllSetBits() []board.Square {
 func (bh *BitsHandler) addSquare(squares []board.Square, rowIndex int, currentByte byte) []board.Square {
 	nextSetBitPosition := getRightmostSetBitLeftToRightPos(currentByte)
 	squareName := board.WhiteQueenLayout[rowIndex][nextSetBitPosition]
-	return append(squares, board.NewSquare(squareName, 1, rowIndex, nextSetBitPosition))
+	return append(squares, board.NewSquare(squareName, rowIndex, nextSetBitPosition))
 }
 func removeRightmostSetBit(currentByte byte) byte {
 	return currentByte & (currentByte - 1)
