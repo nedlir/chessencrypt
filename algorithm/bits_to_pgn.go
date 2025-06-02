@@ -5,15 +5,11 @@ import (
 )
 
 type Algorithm struct {
-	bitMatrix      []byte
 	movesValidator *board.MovesValidator
 }
 
-func NewAlgorithm(
-	matrix []byte,
-) Algorithm {
+func NewAlgorithm() Algorithm {
 	return Algorithm{
-		bitMatrix:      matrix,
 		movesValidator: board.NewMovesValidator(),
 	}
 }
@@ -26,7 +22,6 @@ func (a *Algorithm) DetermineNextWhiteMove(currentSquare board.Square, nextSquar
 	traversalDownSquare := getTraversalDownSquare(currentSquare, nextSquareWithOne)
 
 	return traversalDownSquare, true
-
 }
 
 func getTraversalDownSquare(currentSquare board.Square, nextSquareWithOne board.Square) board.Square {
@@ -39,7 +34,6 @@ func getTraversalDownSquare(currentSquare board.Square, nextSquareWithOne board.
 }
 
 func (a *Algorithm) DetermineNextBlackMove(isAssist bool, currentSquare board.Square) board.Square {
-	// TODO: add check if currentSquare is not in the {} of the squares here, returnm empty struct Square{}
 	if isAssist {
 		switch currentSquare.Name() {
 		case "e8", "f8":
