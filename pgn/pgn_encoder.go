@@ -19,8 +19,8 @@ const FIRST_WHITE_SQUARE = "a6"
 const FIRST_BLACK_SQUARE = "f8"
 const END_OF_GAME_DRAW = "1/2-1/2"
 
-func NewPGNEncoder() *PGNEncoder {
-	return &PGNEncoder{
+func NewPGNEncoder() PGNEncoder {
+	return PGNEncoder{
 		bitsHandler: bitshandler.NewBitHandler(),
 		algo:        algorithm.NewAlgorithm(),
 	}
@@ -69,6 +69,10 @@ func (p *PGNEncoder) writeMoves(pgnBoard *strings.Builder) {
 	currentBlackSquare := board.NewSquare(FIRST_BLACK_SQUARE, 0, 5)
 
 	squareIndex := 0
+	if squaresToMark[squareIndex].Name() == FIRST_WHITE_SQUARE {
+		squareIndex++
+	}
+
 	pgnMoveIndex := 2
 
 	for squareIndex < len(squaresToMark) {
