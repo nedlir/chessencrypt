@@ -1,10 +1,10 @@
-package json
+package jsonhandler
 
 import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/nedlir/chessencrypt/utils/files"
+	"github.com/nedlir/chessencrypt/utils/fileshandler"
 )
 
 type StringSet map[string]bool
@@ -12,7 +12,7 @@ type StringSet map[string]bool
 type SetMap map[string]StringSet
 
 func LoadToMapFromFile(filepath string) (SetMap, error) {
-	data, err := files.ReadFile(filepath)
+	data, err := fileshandler.ReadFile(filepath)
 	if err != nil {
 		return nil, err
 	}

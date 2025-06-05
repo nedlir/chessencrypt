@@ -1,14 +1,14 @@
 package algorithm
 
-// func calculatePositionalDistance(currentSquare string, nextSquare string) int {
-
-// 	return int(nextSquare - currentSquare)
-// }
+import "github.com/nedlir/chessencrypt/chess/board"
 
 // func DetermineNextSetBit() {
 // 	nextBitToSet
 // }
 
-func calculatePositionalDistance(currentSquare, nextSquare string) int {
-	return int(nextSquare[0]) - int(currentSquare[0])
+func calculatePositionalDistance(currentSquare string, nextSquare string) int {
+	currentColumn := board.BlackSquarePositions[currentSquare].Col
+	nextColumn := board.BlackSquarePositions[nextSquare].Col
+
+	return currentColumn - nextColumn
 }

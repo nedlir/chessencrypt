@@ -3,7 +3,7 @@ package board
 import (
 	"fmt"
 
-	"github.com/nedlir/chessencrypt/utils/parsers/json"
+	"github.com/nedlir/chessencrypt/utils/parsers/jsonhandler"
 )
 
 type queenValidMovesMap map[string][]string
@@ -40,7 +40,7 @@ func (mv *MovesValidator) IsNextMoveValidMove(currentSquare Square, nextMove Squ
 }
 
 func initQueenValidMoves(filepath string) (queenValidMovesMap, error) {
-	data, err := json.LoadToMapFromFile(filepath)
+	data, err := jsonhandler.LoadToMapFromFile(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load valid moves: %w", err)
 	}

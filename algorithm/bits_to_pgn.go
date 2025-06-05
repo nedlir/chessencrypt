@@ -4,16 +4,6 @@ import (
 	"github.com/nedlir/chessencrypt/chess/board"
 )
 
-type Algorithm struct {
-	movesValidator *board.MovesValidator
-}
-
-func NewAlgorithm() Algorithm {
-	return Algorithm{
-		movesValidator: board.NewMovesValidator(),
-	}
-}
-
 func (a *Algorithm) DetermineNextWhiteMove(currentSquare board.Square, nextSquareWithOne board.Square) (board.Square, bool) {
 	if a.movesValidator.IsNextMoveValidMove(currentSquare, nextSquareWithOne) {
 		return nextSquareWithOne, false

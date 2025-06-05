@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/nedlir/chessencrypt/algorithm"
-	"github.com/nedlir/chessencrypt/bitshandler"
 	"github.com/nedlir/chessencrypt/chess/board"
+	"github.com/nedlir/chessencrypt/utils/bitshandler"
 )
 
 type PGNEncoder struct {
