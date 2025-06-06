@@ -20,7 +20,7 @@ func NewBitHandler() BitsHandler {
 func (bh *BitsHandler) UpdateMatrix(newMatrix []byte) {
 	bh.matrix = newMatrix
 	bh.allPositions = bh.findAllSetBits()
-	bh.currentIndex = 0 // Reset iterator
+	bh.currentIndex = 0
 }
 
 func (bh *BitsHandler) findAllSetBits() []board.Square {
@@ -28,7 +28,7 @@ func (bh *BitsHandler) findAllSetBits() []board.Square {
 
 	for rowIndex, rowByte := range bh.matrix {
 		if rowByte == 0 {
-			continue // Skip empty rows (0b00000000) entirely
+			continue
 		}
 
 		rowStartIndex := len(squares)
@@ -75,5 +75,10 @@ func (bh *BitsHandler) CurrentIndex() int {
 }
 
 func (bh *BitsHandler) IsFirstBitZero() bool {
-	return (bh.matrix[0]>>7)&1 == 0
+
+	firstByte := bh.matrix[0]
+	firstBit := (firstByte >> 7) & 1
+	result := firstBit == 0
+
+	return result
 }
