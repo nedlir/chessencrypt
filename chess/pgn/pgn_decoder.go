@@ -29,76 +29,88 @@ func (p *PGNDecoder) PGNToBytes(pgn string) string {
 	moves := extractMovesFromPgn(pgnTokens)
 	fmt.Printf("moves = %v\n\n", moves)
 
-	// Initial positions
-	currentBlackMove := board.NewSquare(FIRST_BLACK_SQUARE)
-	currentWhiteMove := board.NewSquare(FIRST_WHITE_SQUARE)
-	fmt.Printf("start Black at %s, White at %s\n\n",
-		currentBlackMove.Name(), currentWhiteMove.Name(),
-	)
-
-	// Prepare result
-	result := "0"
-	if firstBitValue == 1 {
-		result = "1"
-	}
-	fmt.Printf("initial result = %q\n\n", result)
-
-	// Seed next moves
-	movesIndex := 0
-	nextBlackMove := board.NewSquare(moves[movesIndex])
-	nextWhiteMove := board.NewSquare(moves[movesIndex+1])
-	fmt.Printf("next Black = %s, next White = %s\n\n",
-		nextBlackMove.Name(), nextWhiteMove.Name(),
-	)
-
-	currentByteIndex := 1
-	counter := 0
-
-	for movesIndex+1 < len(moves) && counter < 8 {
-		fmt.Printf("loop #%d | movesIndex=%d | byteIndex=%d\n",
-			counter, movesIndex, currentByteIndex,
-		)
-		fmt.Printf("current White = %s(col %d), Black = %s(col %d)\n",
-			currentWhiteMove.Name(), currentWhiteMove.Column(),
-			currentBlackMove.Name(), currentBlackMove.Column(),
-		)
-		fmt.Printf("next White = %s(col %d), Black = %s(col %d)\n",
-			nextWhiteMove.Name(), nextWhiteMove.Column(),
-			nextBlackMove.Name(), nextBlackMove.Column(),
-		)
-
-		isNewRow := isNewWhiteRow(currentWhiteMove, nextWhiteMove)
-		fmt.Printf("isNewRow = %v\n", isNewRow)
-
-		var bit string
-		if currentByteIndex == nextWhiteMove.Column() {
-			if isAssistanceMove(currentBlackMove, nextBlackMove) {
-				bit = "0assistance"
-			} else {
-				bit = "1"
-			}
-			currentBlackMove = nextBlackMove
-			currentWhiteMove = nextWhiteMove
-
-			movesIndex += 2
-			if movesIndex+1 < len(moves) {
-				nextBlackMove = board.NewSquare(moves[movesIndex])
-				nextWhiteMove = board.NewSquare(moves[movesIndex+1])
-			}
-		} else {
-			bit = "0"
+	// Split moves into bytes (each byte needs 8 bits)
+	var bytesMoves [][]string
+	for i := 0; i < len(moves); i += 8 {
+		end := i + 8
+		if end > len(moves) {
+			end = len(moves)
 		}
-		fmt.Printf("appended bit = %q\n", bit)
+		bytesMoves = append(bytesMoves, moves[i:end])
+	}
 
-		result += bit
-		if currentByteIndex == 7 {
-			currentByteIndex = 0
+	// Process each byte's moves
+	result := ""
+	for byteIndex, byteMoves := range bytesMoves {
+		// Initial positions for this byte
+		currentBlackMove := board.NewSquare(FIRST_BLACK_SQUARE)
+		currentWhiteMove := board.NewSquare(FIRST_WHITE_SQUARE)
+		fmt.Printf("Processing byte %d, starting at %s, %s\n",
+			byteIndex, currentBlackMove.Name(), currentWhiteMove.Name(),
+		)
+
+		// Set first bit
+		if byteIndex == 0 {
+			if firstBitValue == 1 {
+				result += "1"
+			} else {
+				result += "0"
+			}
 		} else {
+			result += "0" // Subsequent bytes start with 0
+		}
+
+		// Process moves for this byte
+		currentByteIndex := 1
+		movesIndex := 0
+
+		if len(byteMoves) > 1 {
+			nextBlackMove := board.NewSquare(byteMoves[movesIndex])
+			nextWhiteMove := board.NewSquare(byteMoves[movesIndex+1])
+
+			for movesIndex+1 < len(byteMoves) && currentByteIndex < 8 {
+				fmt.Printf("byte %d: movesIndex=%d | byteIndex=%d\n",
+					byteIndex, movesIndex, currentByteIndex,
+				)
+				fmt.Printf("current White = %s(col %d), Black = %s(col %d)\n",
+					currentWhiteMove.Name(), currentWhiteMove.Column(),
+					currentBlackMove.Name(), currentBlackMove.Column(),
+				)
+				fmt.Printf("next White = %s(col %d), Black = %s(col %d)\n",
+					nextWhiteMove.Name(), nextWhiteMove.Column(),
+					nextBlackMove.Name(), nextBlackMove.Column(),
+				)
+
+				var bit string
+				if currentByteIndex == nextWhiteMove.Column() {
+					if isAssistanceMove(currentBlackMove, nextBlackMove) {
+						bit = "0assistance"
+					} else {
+						bit = "1"
+					}
+					currentBlackMove = nextBlackMove
+					currentWhiteMove = nextWhiteMove
+
+					movesIndex += 2
+					if movesIndex+1 < len(byteMoves) {
+						nextBlackMove = board.NewSquare(byteMoves[movesIndex])
+						nextWhiteMove = board.NewSquare(byteMoves[movesIndex+1])
+					}
+				} else {
+					bit = "0"
+				}
+				fmt.Printf("appended bit = %q\n", bit)
+
+				result += bit
+				currentByteIndex++
+			}
+		}
+
+		// Fill remaining bits with 0s if needed
+		for currentByteIndex < 8 {
+			result += "0"
 			currentByteIndex++
 		}
-		fmt.Printf("updated result = %q\n\n", result)
-
-		counter++
 	}
 
 	fmt.Printf("final bitstring = %q\n", result)
@@ -106,12 +118,10 @@ func (p *PGNDecoder) PGNToBytes(pgn string) string {
 }
 
 func isNewWhiteRow(currentWhiteMove board.Square, nextWhiteMove board.Square) bool {
-
 	return math.Abs(float64(currentWhiteMove.Row()-nextWhiteMove.Row())) >= 1
 }
 
 func isAssistanceMove(currentBlackMove board.Square, nextBlackMove board.Square) bool {
-
 	fmt.Println("Abs(float64(currentBlackMove.Column()-nextBlackMove.Column())):")
 	res := math.Abs(float64(currentBlackMove.Column() - nextBlackMove.Column()))
 	fmt.Println(res)
