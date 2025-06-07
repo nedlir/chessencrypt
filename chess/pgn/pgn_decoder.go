@@ -19,7 +19,7 @@ func NewPGNDecoder() PGNDecoder {
 	}
 }
 
-func (p *PGNDecoder) PGNToBytes(pgn string) string {
+func (p *PGNDecoder) PGNToBytes(pgn string) []byte {
 	// Tokenize PGN and debug
 	pgnTokens := strings.Fields(pgn)
 	fmt.Printf("pgnTokens = %v\n", pgnTokens)
@@ -39,12 +39,9 @@ func (p *PGNDecoder) PGNToBytes(pgn string) string {
 		currentBlackMove.Name(), currentWhiteMove.Name(),
 	)
 
-	// Prepare result bitstring, seed first bit
-	result := "0"
-	if firstBitValue == 1 {
-		result = "1"
-	}
-	fmt.Printf("initial result = %q\n\n", result)
+	// Initialize result with first bit
+	var result []byte
+	currentByte := byte(firstBitValue) << 7
 
 	// Seed next moves
 	movesIndex := 0
@@ -88,14 +85,11 @@ func (p *PGNDecoder) PGNToBytes(pgn string) string {
 
 		// Handle row break if needed
 		if isNewRow {
-			// Complete current byte with zeros if needed
+			// Complete current byte if needed
 			if currentByteIndex > 0 {
-				for currentByteIndex < 8 {
-					result += "0"
-					currentByteIndex++
-				}
+				result = append(result, currentByte)
 			}
-			result += " "
+			currentByte = 0
 			currentByteIndex = 0
 
 			// Update positions for new row
@@ -112,12 +106,12 @@ func (p *PGNDecoder) PGNToBytes(pgn string) string {
 		}
 
 		// Determine bit for this move-pair
-		var bit string
+		var bit byte
 		if currentByteIndex == nextWhiteMove.Column() {
 			if isAssistanceMove(currentBlackMove, nextBlackMove) {
-				bit = "0"
+				bit = 0
 			} else {
-				bit = "1"
+				bit = 1
 			}
 			currentBlackMove = nextBlackMove
 			currentWhiteMove = nextWhiteMove
@@ -127,29 +121,29 @@ func (p *PGNDecoder) PGNToBytes(pgn string) string {
 				nextWhiteMove = board.NewSquare(moves[movesIndex+1])
 			}
 		} else {
-			bit = "0"
+			bit = 0
 		}
-		fmt.Printf("  appended bit = %q\n", bit)
+		fmt.Printf("  appended bit = %d\n", bit)
 
-		// Append bit and manage byte/delimiter
-		result += bit
+		// Add bit to current byte
+		currentByte |= bit << (7 - currentByteIndex)
+		fmt.Printf("  current byte = %08b\n", currentByte)
+
 		if currentByteIndex == 7 {
+			result = append(result, currentByte)
+			currentByte = 0
 			currentByteIndex = 0
 		} else {
 			currentByteIndex++
 		}
-		fmt.Printf("  updated result = %q\n", result)
 	}
 
-	// Complete final byte with zeros if needed
-	if currentByteIndex > 0 && currentByteIndex < 8 {
-		for currentByteIndex < 8 {
-			result += "0"
-			currentByteIndex++
-		}
+	// Complete final byte if needed
+	if currentByteIndex > 0 {
+		result = append(result, currentByte)
 	}
 
-	fmt.Printf("\nfinal bitstring = %q\n", result)
+	fmt.Printf("\nfinal bytes = %08b\n", result)
 	return result
 }
 
