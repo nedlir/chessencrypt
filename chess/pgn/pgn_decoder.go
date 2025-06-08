@@ -1,3 +1,5 @@
+//TODO: some of this logic should definitely be moved to algo package
+
 package pgn
 
 import (
