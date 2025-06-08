@@ -1,7 +1,6 @@
 package pgn
 
 import (
-	"fmt"
 	"math"
 	"strings"
 
@@ -20,79 +19,32 @@ func NewPGNDecoder() PGNDecoder {
 }
 
 func (p *PGNDecoder) PGNToBytes(pgn string) []byte {
-	// Tokenize PGN and debug
 	pgnTokens := strings.Fields(pgn)
-	fmt.Printf("pgnTokens = %v\n", pgnTokens)
-
-	// Determine initial bit from FEN
 	firstBitValue := determineFirstBitValue(pgnTokens)
-	fmt.Printf("firstBitValue = %d\n", firstBitValue)
-
-	// Extract moves and debug
 	moves := extractMovesFromPgn(pgnTokens)
-	fmt.Printf("moves = %v\n\n", moves)
 
-	// Initial positions
 	currentBlackMove := board.NewSquare(FIRST_BLACK_SQUARE)
 	currentWhiteMove := board.NewSquare(FIRST_WHITE_SQUARE)
-	fmt.Printf("start Black at %s, White at %s\n\n",
-		currentBlackMove.Name(), currentWhiteMove.Name(),
-	)
 
-	// Initialize result with first bit
 	var result []byte
 	currentByte := byte(firstBitValue) << 7
 
-	// Seed next moves
 	movesIndex := 0
 	nextBlackMove := board.NewSquare(moves[movesIndex])
 	nextWhiteMove := board.NewSquare(moves[movesIndex+1])
-	fmt.Printf("next Black = %s, next White = %s\n\n",
-		nextBlackMove.Name(), nextWhiteMove.Name(),
-	)
 
 	currentByteIndex := 1
 
 	for movesIndex+1 < len(moves) {
-		fmt.Printf("\nLoop for moves %d/%d\n", movesIndex+2, len(moves))
-		fmt.Printf("  Indexes -> movesIndex: %d, byteIndex: %d\n",
-			movesIndex, currentByteIndex,
-		)
-
-		fmt.Printf("  Current Moves:\n")
-		fmt.Printf("    White: %s (col %d, row %d)\n",
-			currentWhiteMove.Name(), currentWhiteMove.Column(), currentWhiteMove.Row(),
-		)
-		fmt.Printf("    Black: %s (col %d)\n",
-			currentBlackMove.Name(), currentBlackMove.Column(),
-		)
-
-		fmt.Printf("  Next Moves:\n")
-		fmt.Printf("    White: %s (col %d, row %d)\n",
-			nextWhiteMove.Name(), nextWhiteMove.Column(), nextWhiteMove.Row(),
-		)
-		fmt.Printf("    Black: %s (col %d)\n\n",
-			nextBlackMove.Name(), nextBlackMove.Column(),
-		)
-
-		// Detect new White row
 		isNewRow := isNewWhiteRow(currentWhiteMove, nextWhiteMove)
-		fmt.Printf("  New White row detected: %v (from rank %d to %d)\n",
-			isNewRow,
-			currentWhiteMove.Row(),
-			nextWhiteMove.Row(),
-		)
 
-		// Handle row break if needed
 		if isNewRow {
-			// Complete current byte if needed
 			if currentByteIndex > 0 {
 				result = append(result, currentByte)
 			}
 			currentByte = 0
 			currentByteIndex = 0
 
-			// Update positions for new row
 			currentWhiteMove = nextWhiteMove
 			currentBlackMove = nextBlackMove
 			movesIndex += 2
@@ -100,12 +52,9 @@ func (p *PGNDecoder) PGNToBytes(pgn string) []byte {
 				nextBlackMove = board.NewSquare(moves[movesIndex])
 				nextWhiteMove = board.NewSquare(moves[movesIndex+1])
 			}
-			fmt.Printf("  Row transition complete. New positions: White=%s, Black=%s\n",
-				currentWhiteMove.Name(), currentBlackMove.Name())
 			continue
 		}
 
-		// Determine bit for this move-pair
 		var bit byte
 		if currentByteIndex == nextWhiteMove.Column() {
 			if isAssistanceMove(currentBlackMove, nextBlackMove) {
@@ -123,11 +72,8 @@ func (p *PGNDecoder) PGNToBytes(pgn string) []byte {
 		} else {
 			bit = 0
 		}
-		fmt.Printf("  appended bit = %d\n", bit)
 
-		// Add bit to current byte
 		currentByte |= bit << (7 - currentByteIndex)
-		fmt.Printf("  current byte = %08b\n", currentByte)
 
 		if currentByteIndex == 7 {
 			result = append(result, currentByte)
@@ -138,37 +84,18 @@ func (p *PGNDecoder) PGNToBytes(pgn string) []byte {
 		}
 	}
 
-	// Complete final byte if needed
 	if currentByteIndex > 0 {
 		result = append(result, currentByte)
 	}
 
-	fmt.Printf("\nfinal bytes = %08b\n", result)
 	return result
 }
 
-func (p *PGNDecoder) handleNewWhiteRow(
-	currentWhiteMove, nextWhiteMove board.Square,
-	result string, currentByteIndex int,
-) (string, int) {
-	fmt.Printf("Handling new row for white: %s -> %s\n",
-		currentWhiteMove.Name(), nextWhiteMove.Name(),
-	)
-	result += "\n"
-	currentByteIndex = 1
-	return result, currentByteIndex
-}
-
 func isNewWhiteRow(currentWhiteMove board.Square, nextWhiteMove board.Square) bool {
-
 	return math.Abs(float64(currentWhiteMove.Row()-nextWhiteMove.Row())) >= 1
 }
 
 func isAssistanceMove(currentBlackMove board.Square, nextBlackMove board.Square) bool {
-
-	fmt.Println("Abs(float64(currentBlackMove.Column()-nextBlackMove.Column())):")
-	res := math.Abs(float64(currentBlackMove.Column() - nextBlackMove.Column()))
-	fmt.Println(res)
 	return math.Abs(float64(currentBlackMove.Column()-nextBlackMove.Column())) > 1
 }
 
@@ -184,7 +111,7 @@ func determineFirstBitValue(pgnTokens []string) int {
 
 func extractFirstFenValue(pgnTokens []string) string {
 	rawFen := pgnTokens[21]
-	return rawFen[1:2] // skip leading quote
+	return rawFen[1:2]
 }
 
 func extractMovesFromPgn(pgnTokens []string) []string {
