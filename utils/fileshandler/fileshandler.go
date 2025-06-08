@@ -5,37 +5,52 @@ import (
 	"os"
 )
 
-const MaxFileSize = 1024 * 1024 // 1 MB
+const (
+	MaxFileSize     = 1024 * 1024 // 1 MB
+	ChunkSize       = 6
+	PartExtension   = ".pgn"
+	PartNamePattern = "part_%012d" + PartExtension
+)
 
-func ReadFile(filepath string) ([]byte, error) {
-	fileInfo, err := os.Stat(filepath)
+func ReadFile(path string) ([]byte, error) {
+	info, err := os.Stat(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get file info for %s: %w", filepath, err)
+		return nil, fmt.Errorf("stat %q: %w", path, err)
 	}
-
-	if fileInfo.Size() > MaxFileSize {
-		return nil, fmt.Errorf("file %s too large: %d bytes (max %d bytes)", filepath, fileInfo.Size(), MaxFileSize)
+	if info.Size() > MaxFileSize {
+		return nil, fmt.Errorf("file too large: %d bytes (max %d)", info.Size(), MaxFileSize)
 	}
-
-	data, err := os.ReadFile(filepath)
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file %s: %w", filepath, err)
+		return nil, fmt.Errorf("read %q: %w", path, err)
 	}
 	return data, nil
 }
 
-func GetFileSize(filepath string) (int64, error) {
-	fileInfo, err := os.Stat(filepath)
+func WriteFile(path string, data []byte) error {
+	f, err := os.Create(path)
 	if err != nil {
-		return 0, fmt.Errorf("failed to get file info for %s: %w", filepath, err)
+		return fmt.Errorf("create %q: %w", path, err)
 	}
-	return fileInfo.Size(), nil
-}
+	defer f.Close()
 
-func WriteFile(filepath string, data []byte) error {
-	err := os.WriteFile(filepath, data, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to write file %s: %w", filepath, err)
+	if _, err := f.Write(data); err != nil {
+		return fmt.Errorf("write %q: %w", path, err)
 	}
 	return nil
+}
+
+func CreateDir(path string) error {
+	if err := os.MkdirAll(path, os.ModePerm); err != nil {
+		return fmt.Errorf("mkdir %q: %w", path, err)
+	}
+	return nil
+}
+
+func ListDir(path string) ([]os.DirEntry, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return nil, fmt.Errorf("read dir %q: %w", path, err)
+	}
+	return entries, nil
 }
