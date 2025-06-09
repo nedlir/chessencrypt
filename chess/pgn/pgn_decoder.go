@@ -1,9 +1,6 @@
-//TODO: some of this logic should definitely be moved to algo package
-
 package pgn
 
 import (
-	"math"
 	"strings"
 
 	"github.com/nedlir/chessencrypt/algorithm"
@@ -12,6 +9,17 @@ import (
 
 type PGNDecoder struct {
 	algo algorithm.Algorithm
+
+	currentBlackMove board.Square
+	currentWhiteMove board.Square
+	moves            []string
+	movesIndex       int
+	currentByte      byte
+	currentByteIndex int
+	nextBlackMove    board.Square
+	nextWhiteMove    board.Square
+	result           []byte
+	firstBitValue    int
 }
 
 func NewPGNDecoder() PGNDecoder {
@@ -22,83 +30,101 @@ func NewPGNDecoder() PGNDecoder {
 
 func (p *PGNDecoder) PGNToBytes(pgn string) []byte {
 	pgnTokens := strings.Fields(pgn)
-	firstBitValue := determineFirstBitValue(pgnTokens)
-	moves := extractMovesFromPgn(pgnTokens)
+	p.firstBitValue = determineFirstBitValue(pgnTokens)
+	p.moves = extractMovesFromPgn(pgnTokens)
 
-	currentBlackMove := board.NewSquare(FIRST_BLACK_SQUARE)
-	currentWhiteMove := board.NewSquare(FIRST_WHITE_SQUARE)
+	p.initializeState()
 
-	var result []byte
-	currentByte := byte(firstBitValue) << 7
-
-	movesIndex := 0
-	nextBlackMove := board.NewSquare(moves[movesIndex])
-	nextWhiteMove := board.NewSquare(moves[movesIndex+1])
-
-	currentByteIndex := 1
-
-	for movesIndex+1 < len(moves) {
-		isNewRow := isNewWhiteRow(currentWhiteMove, nextWhiteMove)
-
-		if isNewRow {
-			if currentByteIndex > 0 {
-				result = append(result, currentByte)
-			}
-			currentByte = 0
-			currentByteIndex = 0
-
-			currentWhiteMove = nextWhiteMove
-			currentBlackMove = nextBlackMove
-			movesIndex += 2
-			if movesIndex+1 < len(moves) {
-				nextBlackMove = board.NewSquare(moves[movesIndex])
-				nextWhiteMove = board.NewSquare(moves[movesIndex+1])
-			}
+	for p.movesIndex+1 < len(p.moves) {
+		if p.algo.IsNewWhiteRow(p.currentWhiteMove, p.nextWhiteMove) {
+			p.handleNewRow()
 			continue
 		}
 
-		var bit byte
-		if currentByteIndex == nextWhiteMove.Column() {
-			if isAssistanceMove(currentBlackMove, nextBlackMove) {
-				bit = 0
-			} else {
-				bit = 1
-			}
-			currentBlackMove = nextBlackMove
-			currentWhiteMove = nextWhiteMove
-			movesIndex += 2
-			if movesIndex+1 < len(moves) {
-				nextBlackMove = board.NewSquare(moves[movesIndex])
-				nextWhiteMove = board.NewSquare(moves[movesIndex+1])
-			}
-		} else {
+		bit := p.calculateBitForPosition()
+		p.addBitToByte(bit)
+	}
+
+	return p.finalizeResult()
+}
+
+func (p *PGNDecoder) initializeState() {
+	p.currentBlackMove = board.NewSquare(FIRST_BLACK_SQUARE)
+	p.currentWhiteMove = board.NewSquare(FIRST_WHITE_SQUARE)
+	p.movesIndex = 0
+	p.currentByte = byte(p.firstBitValue) << 7
+	p.currentByteIndex = 1
+	p.nextBlackMove = board.NewSquare(p.moves[p.movesIndex])
+	p.nextWhiteMove = board.NewSquare(p.moves[p.movesIndex+1])
+	p.result = []byte{}
+}
+
+func (p *PGNDecoder) handleNewRow() {
+	if p.currentByteIndex > 0 {
+		p.result = append(p.result, p.currentByte)
+	}
+	p.currentByte = 0
+	p.currentByteIndex = 0
+
+	p.currentWhiteMove = p.nextWhiteMove
+	p.currentBlackMove = p.nextBlackMove
+	p.movesIndex += 2
+	if p.movesIndex+1 < len(p.moves) {
+		p.nextBlackMove = board.NewSquare(p.moves[p.movesIndex])
+		p.nextWhiteMove = board.NewSquare(p.moves[p.movesIndex+1])
+	}
+}
+
+func (p *PGNDecoder) calculateBitForPosition() byte {
+	var bit byte
+	if p.currentByteIndex == p.nextWhiteMove.Column() {
+		if p.algo.IsAssistanceMove(p.currentBlackMove, p.nextBlackMove) {
 			bit = 0
-		}
-
-		currentByte |= bit << (7 - currentByteIndex)
-
-		if currentByteIndex == 7 {
-			result = append(result, currentByte)
-			currentByte = 0
-			currentByteIndex = 0
 		} else {
-			currentByteIndex++
+			bit = 1
 		}
+		p.currentBlackMove = p.nextBlackMove
+		p.currentWhiteMove = p.nextWhiteMove
+		p.movesIndex += 2
+		if p.movesIndex+1 < len(p.moves) {
+			p.nextBlackMove = board.NewSquare(p.moves[p.movesIndex])
+			p.nextWhiteMove = board.NewSquare(p.moves[p.movesIndex+1])
+		}
+	} else {
+		bit = 0
 	}
-
-	if currentByteIndex > 0 {
-		result = append(result, currentByte)
-	}
-
-	return result
+	return bit
 }
 
-func isNewWhiteRow(currentWhiteMove board.Square, nextWhiteMove board.Square) bool {
-	return math.Abs(float64(currentWhiteMove.Row()-nextWhiteMove.Row())) >= 1
+func (p *PGNDecoder) addBitToByte(bit byte) {
+	p.currentByte |= bit << (7 - p.currentByteIndex)
+	if p.currentByteIndex == 7 {
+		p.result = append(p.result, p.currentByte)
+		p.currentByte = 0
+		p.currentByteIndex = 0
+	} else {
+		p.currentByteIndex++
+	}
 }
 
-func isAssistanceMove(currentBlackMove board.Square, nextBlackMove board.Square) bool {
-	return math.Abs(float64(currentBlackMove.Column()-nextBlackMove.Column())) > 1
+func (p *PGNDecoder) finalizeResult() []byte {
+	if p.currentByteIndex > 0 {
+		p.result = append(p.result, p.currentByte)
+	}
+	return p.result
+}
+
+func (p *PGNDecoder) Reset() {
+	p.currentBlackMove = board.Square{}
+	p.currentWhiteMove = board.Square{}
+	p.moves = nil
+	p.movesIndex = 0
+	p.currentByte = 0
+	p.currentByteIndex = 0
+	p.nextBlackMove = board.Square{}
+	p.nextWhiteMove = board.Square{}
+	p.result = nil
+	p.firstBitValue = 0
 }
 
 func determineFirstBitValue(pgnTokens []string) int {
@@ -118,25 +144,15 @@ func extractFirstFenValue(pgnTokens []string) string {
 
 func extractMovesFromPgn(pgnTokens []string) []string {
 	gameMoveTokens := pgnTokens[28:]
-	n := 0
+
+	moves := make([]string, 0)
 	for i, token := range gameMoveTokens {
-		if i%3 != 1 {
-			gameMoveTokens[n] = token
-			n++
-		}
-	}
-	moves := gameMoveTokens[:n]
-
-	if len(moves) > 0 {
-		last := moves[len(moves)-1]
-		if last == "1-0" || last == "0-1" || last == "1/2-1/2" || last == "*" {
-			moves = moves[:len(moves)-1]
-		}
-	}
-
-	for i, move := range moves {
-		if len(move) > 0 && move[0] == 'Q' {
-			moves[i] = move[1:]
+		if i%3 != 1 { // valid move index
+			// Strip 'Q' prefix if present
+			if len(token) > 0 && token[0] == 'Q' {
+				token = token[1:]
+			}
+			moves = append(moves, token)
 		}
 	}
 
