@@ -10,8 +10,13 @@ import (
 )
 
 type PGNEncoder struct {
-	bitsHandler bitshandler.BitsHandler
-	algo        algorithm.Algorithm
+	bitsHandler        bitshandler.BitsHandler
+	algo               algorithm.Algorithm
+	currentWhiteSquare board.Square
+	currentBlackSquare board.Square
+	squareIndex        int
+	squaresToMark      []board.Square
+	pgnMoveIndex       int
 }
 
 func NewPGNEncoder() PGNEncoder {
@@ -23,72 +28,90 @@ func NewPGNEncoder() PGNEncoder {
 
 func (p *PGNEncoder) BytesToPgn(matrix []byte, chunkNumber int) string {
 	p.bitsHandler.UpdateMatrix(matrix)
+	p.initializeState()
 
 	var pgnBoard strings.Builder
+	pgnBoard.WriteString(p.buildHeader(chunkNumber))
 
-	p.writePGNHeaders(&pgnBoard, chunkNumber)
-
-	p.writeMoves(&pgnBoard)
+	for p.squareIndex < len(p.squaresToMark) {
+		whiteMove, blackMove, isAssist := p.generateNextMove()
+		p.writeMove(&pgnBoard, whiteMove, blackMove)
+		p.advanceState(isAssist)
+	}
 
 	p.writeGameResult(&pgnBoard)
-
 	return pgnBoard.String()
 }
 
-func (p *PGNEncoder) writePGNHeaders(pgnBoard *strings.Builder, chunkNumber int) {
+func (p *PGNEncoder) initializeState() {
+	p.squaresToMark = p.bitsHandler.AllSetBits()
+	p.currentWhiteSquare = board.NewSquare(FIRST_WHITE_SQUARE)
+	p.currentBlackSquare = board.NewSquare(FIRST_BLACK_SQUARE)
+	p.squareIndex = 0
+	p.pgnMoveIndex = 2
 
-	header := fmt.Sprintf(PGN_HEADER_TEMPLATE, chunkNumber)
-	pgnBoard.WriteString(header)
-
-	if p.bitsHandler.IsFirstBitZero() {
-		pgnBoard.WriteString(fmt.Sprintf(`[FEN "%v"]`+"\n", board.FENZero))
-	} else {
-		pgnBoard.WriteString(fmt.Sprintf(`[FEN "%v"]`+"\n", board.FENOne))
+	if len(p.squaresToMark) > 0 && p.squaresToMark[p.squareIndex].Name() == FIRST_WHITE_SQUARE {
+		p.squareIndex++
 	}
-
-	pgnBoard.WriteString(fmt.Sprintf("1.%s ", WHITE_QUEEN_MOVE_ZERO))
 }
 
-func (p *PGNEncoder) writeMoves(pgnBoard *strings.Builder) {
-	squaresToMark := p.bitsHandler.AllSetBits()
+func (p *PGNEncoder) buildHeader(chunkNumber int) string {
+	var header strings.Builder
 
-	currentWhiteSquare := board.NewSquare(FIRST_WHITE_SQUARE)
-	currentBlackSquare := board.NewSquare(FIRST_BLACK_SQUARE)
+	header.WriteString(fmt.Sprintf(PGN_HEADER_TEMPLATE, chunkNumber))
+	header.WriteString(p.buildFENString())
+	header.WriteString(fmt.Sprintf("1.%s ", WHITE_QUEEN_MOVE_ZERO))
 
-	squareIndex := 0
-	if len(squaresToMark) > 0 && squaresToMark[squareIndex].Name() == FIRST_WHITE_SQUARE {
-		squareIndex++
+	return header.String()
+}
+
+func (p *PGNEncoder) buildFENString() string {
+	if p.bitsHandler.IsFirstBitZero() {
+		return fmt.Sprintf(`[FEN "%v"]`+"\n", board.FENZero)
 	}
+	return fmt.Sprintf(`[FEN "%v"]`+"\n", board.FENOne)
+}
 
-	pgnMoveIndex := 2
+func (p *PGNEncoder) generateNextMove() (whiteMove, blackMove string, isAssist bool) {
+	targetSquare := p.squaresToMark[p.squareIndex]
 
-	for squareIndex < len(squaresToMark) {
+	nextWhiteSquare, isAssist := p.algo.DetermineNextWhiteMove(p.currentWhiteSquare, targetSquare)
+	p.currentWhiteSquare = nextWhiteSquare
 
-		targetSquare := squaresToMark[squareIndex]
+	nextBlackSquare := p.algo.DetermineNextBlackMove(isAssist, p.currentBlackSquare)
+	p.currentBlackSquare = nextBlackSquare
 
-		nextWhiteSquare, isAssist := p.algo.DetermineNextWhiteMove(currentWhiteSquare, targetSquare)
+	whiteMove = p.formatMove(nextWhiteSquare)
+	blackMove = p.formatMove(nextBlackSquare)
 
-		currentWhiteSquare = nextWhiteSquare
+	return whiteMove, blackMove, isAssist
+}
 
-		if !isAssist {
-			squareIndex++
-		}
+func (p *PGNEncoder) formatMove(square board.Square) string {
+	return fmt.Sprintf("Q%v", square.Name())
+}
 
-		currentBlackSquare = p.algo.DetermineNextBlackMove(isAssist, currentBlackSquare)
+func (p *PGNEncoder) writeMove(pgnBoard *strings.Builder, whiteMove, blackMove string) {
+	pgnBoard.WriteString(fmt.Sprintf("%s  ", blackMove))
+	pgnBoard.WriteString(fmt.Sprintf("%d. ", p.pgnMoveIndex))
+	pgnBoard.WriteString(fmt.Sprintf("%s  ", whiteMove))
+}
 
-		blackMove := fmt.Sprintf("Q%v  ", currentBlackSquare.Name())
-		moveNumber := fmt.Sprintf("%d. ", pgnMoveIndex)
-		whiteMove := fmt.Sprintf("Q%v  ", nextWhiteSquare.Name())
-
-		pgnBoard.WriteString(blackMove)
-		pgnBoard.WriteString(moveNumber)
-		pgnBoard.WriteString(whiteMove)
-
-		pgnMoveIndex++
+func (p *PGNEncoder) advanceState(isAssist bool) {
+	if !isAssist {
+		p.squareIndex++
 	}
-
+	p.pgnMoveIndex++
 }
 
 func (p *PGNEncoder) writeGameResult(pgnBoard *strings.Builder) {
 	pgnBoard.WriteString(END_OF_GAME_DRAW)
+}
+
+func (p *PGNEncoder) Reset() {
+	p.currentWhiteSquare = board.Square{}
+	p.currentBlackSquare = board.Square{}
+	p.squareIndex = 0
+	p.squaresToMark = nil
+	p.pgnMoveIndex = 0
 }
