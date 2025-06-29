@@ -146,10 +146,11 @@ Formally, if the Black Queen moves from position \( B = (x_b, y_b) \) to positio
 $$
 b =
 \begin{cases}
-1 & \text{if the Manhattan distance } d_{\text{Manhattan}}(B, T) = 1, \\[6pt]
+1 & \text{if the Manhattan distance } d_{\text{Manhattan}}(B, T) = 1, \\
 0 & \text{if } d_{\text{Manhattan}}(B, T) \geq 2,
 \end{cases}
 $$
+
 
 where the Manhattan distance is:
 
