@@ -257,7 +257,10 @@ Here are the values of the letters `Golang` is built from:
             </tr>
         </tbody>
     </table>
-    <img src="./readme/squares_to_traverse.jpg" style="width:30%; " title="squares to traverse">
+
+So these are the swuares we will have to mark:
+
+    <img src="./readme/squares_to_traverse.jpg" style="width:40%; " title="squares to traverse">
 </div>
 
 And the whole gameplay:
