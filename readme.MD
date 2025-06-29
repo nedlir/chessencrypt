@@ -257,9 +257,9 @@ Here are the values of the letters `Golang` is built from:
             </tr>
         </tbody>
     </table>
-    <img src="./readme/squares_to_traverse.jpg" style="width:25%; " title="squares to traverse">
+    <img src="./readme/squares_to_traverse.jpg" style="width:60%; " title="squares to traverse">
 </div>
 
 And the whole gameplay:
 
- <img src="./readme/game_demo.gif" style="width:40%; object-fit:contain;" title="demo">
+ <img src="./readme/game_demo.gif" style="width:80%; object-fit:contain;" title="demo">
